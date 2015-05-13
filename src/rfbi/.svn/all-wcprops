@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/Fletcher/FindBugs/svn/!svn/ver/6/DyCon126/src/java/edu/umass/cs/dycon/xml
+END
+TestFindbugsXML.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/Fletcher/FindBugs/svn/!svn/ver/6/DyCon126/src/java/edu/umass/cs/dycon/xml/TestFindbugsXML.java
+END
+BugAPI.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/Fletcher/FindBugs/svn/!svn/ver/6/DyCon126/src/java/edu/umass/cs/dycon/xml/BugAPI.java
+END
+BugFilterIterator.java
+K 25
+svn:wc:ra_dav:version-url
+V 97
+/Fletcher/FindBugs/svn/!svn/ver/6/DyCon126/src/java/edu/umass/cs/dycon/xml/BugFilterIterator.java
+END

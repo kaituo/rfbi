@@ -1,0 +1,82 @@
+/*
+ * FindBugs - Find Bugs in Java programs
+ * Copyright (C) 2003-2008 University of Maryland
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+package edu.umass.cs.dycon.xml;
+
+/**
+ * @author Kaituo
+ */
+import java.util.Set;
+
+import edu.umd.cs.findbugs.MethodAnnotation;
+import edu.umd.cs.findbugs.SortedBugCollection;
+import edu.umd.cs.findbugs.BugInstance;
+import edu.umd.cs.findbugs.SourceLineAnnotation;
+import edu.umd.cs.findbugs.FindBugs;
+
+/**
+ * Test for the internal FindBugs XML API.
+ *
+ *  Note  that  to  run  this,  you  have  to  make  sure  to  include
+ * `findbugs.jar' on your classpath with directory annotations: if you
+ * write `-classpath findbugs.jar', the program will crash; write
+ * `-classpath ./findbugs.jar' instead.
+ *
+ * http://findbugs.sourceforge.net/api/edu/umd/cs/findbugs/SortedBugCollection.html
+ *
+ * This class tests the FindBugs XML API.
+ */
+public class TestFindbugsXML
+{
+	public static final void
+	main(String[] args) throws java.io.IOException, org.dom4j.DocumentException
+	{
+		SortedBugCollection bugs = BugAPI.loadBugs("temp.xml");
+
+		for (BugInstance bi : BugAPI.getBugsByType(bugs, "RR_NOT_CHECKED")) {
+			System.err.println(" * " + bi);
+			for (String s : BugAPI.getClassNames(bi))
+				System.err.println("  + " + s);
+		}
+
+		for (BugInstance bi : BugAPI.getBugsByType(bugs, "RR_NOT_CHECKED")) {
+			System.err.println(" * " + bi);
+
+			// NOTE:  The same BugInstance may point to multiple locations in the same file
+			for (SourceLineAnnotation s : BugAPI.getSourceLines(bi))
+				System.err.println("  + " + s.getSourcePath() + " " + s.getSourceFile() + ": L" + s.getStartLine() + "-" + s.getEndLine());
+		
+			for (MethodAnnotation s : BugAPI.getMethod(bi))
+				System.err.println("  + " + s.getClassName() + " " + s.getMethodName());
+			
+			Set<String> cN = BugAPI.getClassNames(bi);
+			String[] array = (String[])cN.toArray(new String[cN.size()]);
+			System.err.println("  + " + array[0]);
+		
+		}
+
+		for (BugInstance bi : BugAPI.getBugsByType(bugs, "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC")) {
+			BugAPI.minimisePriority(bi);
+		}
+		
+		BugAPI.storeBugs(bugs, "netbeans2-modified.xml");
+	}
+}
+
+
