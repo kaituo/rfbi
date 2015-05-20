@@ -274,6 +274,10 @@
                               <Earlier class="edu.umd.cs.findbugs.detect.UnreadFields"/>
                               <Later class="edu.umd.cs.findbugs.detect.ReadOfInstanceFieldInMethodInvokedByConstructorInSuperclass" />
                     </WithinPass>
+                    <WithinPass>
+                              <Earlier class="edu.umd.cs.findbugs.detect.BuildInterproceduralCallGraph"/>
+                              <Later class="edu.umd.cs.findbugs.detect.DroppedException" />
+                    </WithinPass>
                     <SplitPass>
                               <Earlier class="edu.umd.cs.findbugs.detect.Methods"/>
                               <Later class="edu.umd.cs.findbugs.detect.NoteUnconditionalParamDerefs" />
@@ -301,7 +305,7 @@
           <Detector class="edu.umd.cs.findbugs.detect.NoteDirectlyRelevantTypeQualifiers"
                     speed="fast" reports="" hidden="true"/>
           <Detector class="edu.umd.cs.findbugs.detect.BuildInterproceduralCallGraph" speed="fast"
-                    reports="" disabled="true" hidden="true"/>
+                    reports="" disabled="false" hidden="true"/>
           <Detector class="edu.umd.cs.findbugs.detect.BuildObligationPolicyDatabase" speed="fast"
                     reports="" hidden="true"/>
           <Detector class="edu.umd.cs.findbugs.detect.SynchronizeAndNullCheckField" speed="moderate"
