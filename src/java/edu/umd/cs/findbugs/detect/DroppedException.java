@@ -19,18 +19,27 @@
 
 package edu.umd.cs.findbugs.detect;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.ListIterator;
 import java.util.Set;
 
+import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Code;
 import org.apache.bcel.classfile.CodeException;
+import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantCP;
+import org.apache.bcel.classfile.ConstantClass;
+import org.apache.bcel.classfile.ConstantInvokeDynamic;
+import org.apache.bcel.classfile.ConstantNameAndType;
 import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Utility;
 
+import edu.umass.cs.rfbi.cg.DECodeGenerator;
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -45,8 +54,14 @@ import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.ba.Hierarchy;
 import edu.umd.cs.findbugs.ba.SourceFile;
 import edu.umd.cs.findbugs.ba.SourceFinder;
+import edu.umd.cs.findbugs.ba.XFactory;
+import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.charsets.UTF8;
+import edu.umd.cs.findbugs.classfile.DescriptorFactory;
+import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
+import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
+import edu.umd.cs.findbugs.visitclass.DismantleBytecode;
 import edu.umd.cs.findbugs.visitclass.PreorderVisitor;
 
 public class DroppedException extends PreorderVisitor implements Detector {
@@ -329,8 +344,212 @@ public class DroppedException extends PreorderVisitor implements Detector {
                 bugInstance.addClass(causeName).describe("CLASS_EXCEPTION");
                 bugInstance.addSourceLine(srcLine);
                 bugAccumulator.accumulateBug(bugInstance, srcLine);
-
+                // start code generation
+                String bugLoc = srcLine.toString();
+                analyzeMethodCall(code, start, end, causeName, bugLoc);
             }
+        }
+    }
+
+    void analyzeMethodCall(byte[] codeBytes, int startPC, int endPC, String causeName, String bugLoc) {
+
+        DataInputStream byteStream = new DataInputStream(new ByteArrayInputStream(codeBytes));
+        String classConstantOperand, nameConstantOperand, sigConstantOperand;
+        long skipped = 0;
+        try {
+            skipped = byteStream.skip(startPC);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        } finally {
+            if((int)skipped<startPC) {
+                if (DEBUG) {
+                    System.out.println("cannot skip enough amount of bytes.");
+                }
+                return;
+            }
+        }
+        try {
+            for (int i = startPC; i < endPC;) {
+
+                classConstantOperand = nameConstantOperand = sigConstantOperand = SlashedClassName.NOT_AVAILABLE;
+                int opcode = byteStream.readUnsignedByte();
+                i++;
+                int byteStreamArgCount = NO_OF_OPERANDS[opcode];
+                if (byteStreamArgCount == UNPREDICTABLE) {
+
+                    if (opcode == LOOKUPSWITCH) {
+                        int pad = 4 - (i & 3);
+                        if (pad == 4) {
+                            pad = 0;
+                        }
+                        int count = pad;
+                        while (count > 0) {
+                            count -= byteStream.skipBytes(count);
+                        }
+                        i += pad;
+                        byteStream.readInt();
+
+                        i += 4;
+                        int npairs = byteStream.readInt();
+                        i += 4;
+
+                        for (int o = 0; o < npairs; o++) {
+                            byteStream.readInt();
+                            byteStream.readInt();
+                            i += 8;
+                        }
+
+                    } else if (opcode == TABLESWITCH) {
+                        int pad = 4 - (i & 3);
+                        if (pad == 4) {
+                            pad = 0;
+                        }
+                        int count = pad;
+                        while (count > 0) {
+                            count -= byteStream.skipBytes(count);
+                        }
+                        i += pad;
+                        byteStream.readInt();
+
+                        i += 4;
+                        int switchLow = byteStream.readInt();
+                        i += 4;
+                        int switchHigh = byteStream.readInt();
+                        i += 4;
+                        int npairs = switchHigh - switchLow + 1;
+
+                        for (int o = 0; o < npairs; o++) {
+                            byteStream.readInt();
+                            i += 4;
+                        }
+                    } else if (opcode == WIDE) {
+                        opcode = byteStream.readUnsignedByte();
+                        i++;
+                        switch (opcode) {
+                        case ILOAD:
+                        case FLOAD:
+                        case ALOAD:
+                        case LLOAD:
+                        case DLOAD:
+                        case ISTORE:
+                        case FSTORE:
+                        case ASTORE:
+                        case LSTORE:
+                        case DSTORE:
+                        case RET:
+                            byteStream.readUnsignedShort();
+                            i += 2;
+                            break;
+                        case IINC:
+                            byteStream.readUnsignedShort();
+                            i += 2;
+                            byteStream.readShort();
+                            i += 2;
+                            break;
+                        default:
+                            throw new IllegalStateException(String.format("bad wide bytecode %d: %s" , opcode, OPCODE_NAMES[opcode]));
+                        }
+                    } else {
+                        throw new IllegalStateException(String.format("bad unpredicatable bytecode %d: %s" , opcode, OPCODE_NAMES[opcode]));
+                    }
+                } else {
+                    if (byteStreamArgCount < 0) {
+                        throw new IllegalStateException(String.format("bad length for bytecode %d: %s" , opcode, OPCODE_NAMES[opcode]));
+                    }
+                    for (int k = 0; k < TYPE_OF_OPERANDS[opcode].length; k++) {
+
+                        int v;
+                        int t = TYPE_OF_OPERANDS[opcode][k];
+                        int m = DismantleBytecode.MEANING_OF_OPERANDS[opcode][k];
+                        boolean unsigned = (m == DismantleBytecode.M_CP || m == DismantleBytecode.M_R || m == DismantleBytecode.M_UINT);
+                        switch (t) {
+                        case T_BYTE:
+                            if (unsigned) {
+                                v = byteStream.readUnsignedByte();
+                            } else {
+                                v = byteStream.readByte();
+                            }
+                            /*
+                             * System.out.print("Read byte " + v);
+                             * System.out.println(" with meaning" + m);
+                             */
+                            i++;
+                            break;
+                        case T_SHORT:
+                            if (unsigned) {
+                                v = byteStream.readUnsignedShort();
+                            } else {
+                                v = byteStream.readShort();
+                            }
+                            i += 2;
+                            break;
+                        case T_INT:
+                            v = byteStream.readInt();
+                            i += 4;
+                            break;
+                        default:
+                            throw new IllegalStateException();
+                        }
+                        switch (m) {
+                        case DismantleBytecode.M_BR:
+                        case DismantleBytecode.M_R:
+                        case DismantleBytecode.M_UINT:
+                        case DismantleBytecode.M_INT:
+                        case DismantleBytecode.M_PAD:
+                            break;
+                        case DismantleBytecode.M_CP:
+                            Constant constantRefOperand = getConstantPool().getConstant(v);
+                            if (constantRefOperand instanceof ConstantCP) {
+                                ConstantCP cp = (ConstantCP) constantRefOperand;
+                                ConstantClass clazz = (ConstantClass) getConstantPool().getConstant(cp.getClassIndex());
+                                classConstantOperand = getStringFromIndex(clazz.getNameIndex());
+
+                                ConstantNameAndType sig = (ConstantNameAndType) getConstantPool().getConstant(
+                                        cp.getNameAndTypeIndex());
+                                nameConstantOperand = getStringFromIndex(sig.getNameIndex());
+                                sigConstantOperand = getStringFromIndex(sig.getSignatureIndex());
+                            } else if (constantRefOperand instanceof ConstantInvokeDynamic) {
+                                ConstantInvokeDynamic id = (ConstantInvokeDynamic) constantRefOperand;
+                                ConstantNameAndType sig = (ConstantNameAndType) getConstantPool().getConstant(
+                                        id.getNameAndTypeIndex());
+                                nameConstantOperand = getStringFromIndex(sig.getNameIndex());
+                                sigConstantOperand = getStringFromIndex(sig.getSignatureIndex());
+                            }
+                            break;
+                        default:
+                            throw new IllegalStateException("Unexpecting meaning " + m);
+                        }
+                    }
+
+                }
+                switch (opcode) {
+                case Constants.INVOKESTATIC:
+                case Constants.INVOKEVIRTUAL:
+                case Constants.INVOKEINTERFACE:
+                case Constants.INVOKESPECIAL:
+                    if (nameConstantOperand == SlashedClassName.NOT_AVAILABLE || classConstantOperand == SlashedClassName.NOT_AVAILABLE
+                    || sigConstantOperand == SlashedClassName.NOT_AVAILABLE) {
+                        throw new IllegalStateException("method info not available");
+                    }
+                    MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(classConstantOperand, nameConstantOperand,
+                            sigConstantOperand, opcode == INVOKESTATIC);
+                    XMethod calledXMethod = XFactory.createXMethod(called);
+                    DECodeGenerator.getInstance().generateAspectJ(calledXMethod, causeName, bugLoc);
+                    break;
+                default:
+                    break;
+                }
+            }
+        } catch (IOException e) {
+            AnalysisContext.logError("Error while dismantling bytecode", e);
+            assert false;
+        }
+
+        try {
+            byteStream.close();
+        } catch (IOException e) {
+            assert false;
         }
     }
 

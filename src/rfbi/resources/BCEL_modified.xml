@@ -2576,7 +2576,7 @@
     <SourceLine classname="org.apache.bcel.verifier.structurals.Subroutines$SubroutineImpl" start="123" end="123" startBytecode="111" endBytecode="111" sourcefile="Subroutines.java" sourcepath="org/apache/bcel/verifier/structurals/Subroutines.java"/>
   </BugInstance>
   <Errors errors="0" missingClasses="0"></Errors>
-  <FindBugsSummary timestamp="Fri, 8 May 2015 16:16:04 -0400" total_classes="425" referenced_classes="885" total_bugs="209" total_size="20341" num_packages="8" java_version="1.7.0_71" vm_version="24.71-b01" cpu_seconds="1.01" clock_seconds="0.37" peak_mbytes="45.98" alloc_mbytes="1751.00" gc_seconds="0.00" priority_3="66" priority_2="115" priority_1="28">
+  <FindBugsSummary timestamp="Fri, 8 May 2015 16:16:04 -0400" total_classes="425" referenced_classes="885" total_bugs="209" total_size="20341" num_packages="8" java_version="1.7.0_71" vm_version="24.71-b01" cpu_seconds="1.38" clock_seconds="0.53" peak_mbytes="45.98" alloc_mbytes="1751.00" gc_seconds="0.00" priority_3="66" priority_2="115" priority_1="28">
     <PackageStats package="org.apache.bcel" total_bugs="17" total_types="3" total_size="514" priority_3="1" priority_2="4" priority_1="12">
       <ClassStats class="org.apache.bcel.Constants" sourceFile="Constants.java" interface="true" size="400" bugs="14" priority_3="1" priority_2="4" priority_1="9"/>
       <ClassStats class="org.apache.bcel.ExceptionConstants" sourceFile="ExceptionConstants.java" interface="true" size="54" bugs="3" priority_1="3"/>
@@ -3019,7 +3019,7 @@
       <ClassStats class="org.apache.bcel.verifier.structurals.UninitializedObjectType" sourceFile="UninitializedObjectType.java" interface="false" size="15" bugs="0"/>
     </PackageStats>
     <FindBugsProfile>
-      <ClassProfile name="edu.umd.cs.findbugs.SAXBugCollectionHandler" totalMilliseconds="199" invocations="1" avgMicrosecondsPerInvocation="199839" maxMicrosecondsPerInvocation="199839" standardDeviationMircosecondsPerInvocation="0"/>
+      <ClassProfile name="edu.umd.cs.findbugs.SAXBugCollectionHandler" totalMilliseconds="177" invocations="1" avgMicrosecondsPerInvocation="177751" maxMicrosecondsPerInvocation="177751" standardDeviationMircosecondsPerInvocation="0"/>
     </FindBugsProfile>
   </FindBugsSummary>
   <ClassFeatures></ClassFeatures>

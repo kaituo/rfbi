@@ -152,8 +152,9 @@ abstract public class DismantleBytecode extends AnnotationVisitor {
 
     /**
      * Meaning of bytecode operands
+     * Kaituo: made this public
      */
-    static final byte[][] MEANING_OF_OPERANDS = {
+    public static final byte[][] MEANING_OF_OPERANDS = {
         // 0 1 2 3 4 5 6 7 8 9
         {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, { M_INT }, { M_INT }, { M_CP }, { M_CP }, { M_CP },
         { M_R }, { M_R }, { M_R }, { M_R }, { M_R }, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {},
