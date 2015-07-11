@@ -7,10 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Scanner;
 import java.util.Set;
 
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.classfile.ClassDescriptor;
@@ -28,10 +28,12 @@ public class DECodeGenerator extends CodeGenerator {
 
     protected DECodeGenerator() {
         super();
-        Properties userConfigValues = loadAndApplyProperties("rfbi.mf");
-        d2RDir = userConfigValues.getProperty("de.codegen.folder");//"./DyFile/DE/";
-        d2RFile = userConfigValues.getProperty("de.runtime.record");//"./DyFile/DE/dde2.txt";
+        /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");
+        d2RDir = userConfigValues.getProperty("de.codegen.folder");
+        d2RFile = userConfigValues.getProperty("de.runtime.record");*/
         //filePublic = "./DyFile/DE/DE2.aj";
+        d2RDir = Config.getInstance().getProperty("de.codegen.folder");
+        d2RFile = Config.getInstance().getProperty("de.runtime.record");
         create(d2RFile);
         //create(filePublic);
         pj = 1;
@@ -87,8 +89,6 @@ public class DECodeGenerator extends CodeGenerator {
         sb.append(i);
         sb.append(" {");
         sb.append("\n");
-        //        String ajcode1 = "package " + cP + ";" +
-        //                "\n\n";
 
         return sb.toString();
     }
@@ -104,13 +104,6 @@ public class DECodeGenerator extends CodeGenerator {
         sb.append(")) && handler(");
         sb.append(exceptionStr);
         sb.append("+));");
-        //        String ajcode2 = "\tpointcut concernedExeExc" + "()" +
-        //                "\n\t: !within(DE" + i + ") && (cflow(execution(* "
-        //                + callStr
-        //                + ")) && handler("
-        //                + exceptionStr
-        //                + "+));";
-
 
         return sb.toString();
     }
@@ -160,10 +153,6 @@ public class DECodeGenerator extends CodeGenerator {
     }
 
     public void generateAspectJ(XMethod called, String causeName, String bugLoc) {
-        /*Method meth = getMethod(called);
-        if(meth==null) {
-            return;
-        }*/
         String[] throwns = called.getThrownExceptions();
 
         if(throwns==null || throwns.length==0) {
@@ -191,7 +180,8 @@ public class DECodeGenerator extends CodeGenerator {
 
 
         // method info
-        String c = called.getClassName() + "." + called.getName() + "(..)";
+        // Any "called" method in a class or its subclass
+        String c = called.getClassName() + "+." + called.getName() + "(..)";
         StringBuffer publicPointCut = new StringBuffer();
         publicPointCut.append(generatePart1(true, pj, "edu.umass.cs.rfbi.de"));
         publicPointCut.append(generatePart2(true, c, causeName, pj));

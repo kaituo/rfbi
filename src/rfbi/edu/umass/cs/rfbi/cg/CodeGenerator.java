@@ -1,12 +1,10 @@
 package edu.umass.cs.rfbi.cg;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Properties;
 
 import edu.umass.cs.rfbi.util.RFile;
 import edu.umd.cs.findbugs.BugInstance;
@@ -82,18 +80,5 @@ public abstract class CodeGenerator {
         }
     }
 
-    public Properties loadAndApplyProperties(final String fileName)
-    {
-        final Properties properties = new Properties();
-        try {
-            properties.load(new FileInputStream(fileName));
 
-            return properties;
-        }
-        catch (final Throwable t)
-        {
-            t.printStackTrace();
-            return null; // could not apply configuration file
-        }
-    }
 }
