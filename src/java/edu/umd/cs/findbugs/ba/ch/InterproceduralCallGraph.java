@@ -79,4 +79,11 @@ public class InterproceduralCallGraph extends AbstractGraph<InterproceduralCallG
             InterproceduralCallGraphVertex target) {
         return new InterproceduralCallGraphEdge(source, target);
     }
+
+
+    //    @Override
+    //    public void clear() {
+    //        super.clear();
+    //        methodDescToVertexMap.clear();
+    //    }
 }

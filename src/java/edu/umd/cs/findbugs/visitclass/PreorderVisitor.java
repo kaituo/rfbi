@@ -299,6 +299,9 @@ public class PreorderVisitor extends BetterVisitor implements Constants2 {
         try {
             this.method = method;
             methodName = methodSig = dottedMethodSig = fullyQualifiedMethodName = null;
+            //            if(thisClassInfo.toString().equals("java/util/HashMap")) {
+            //                System.out.print("");
+            //            }
             thisMethodInfo = (MethodInfo) thisClassInfo.findMethod(getMethodName(), getMethodSig(), method.isStatic());
             assert thisMethodInfo != null : "Can't get method info for " + getFullyQualifiedMethodName();
             this.method.accept(this);

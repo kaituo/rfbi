@@ -329,5 +329,12 @@ implements Graph<EdgeType, VertexType> {
 
     protected abstract EdgeType allocateEdge(VertexType source, VertexType target);
 
+    //    protected void clear() {
+    //        edgeList.clear();
+    //        vertexList.clear();
+    //        maxEdgeLabel = 0;
+    //        maxVertexLabel = 0;
+    //    }
+
 }
 

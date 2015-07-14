@@ -44,7 +44,7 @@ import edu.umd.cs.findbugs.classfile.MethodDescriptor;
  */
 public class BuildInterproceduralCallGraph extends BytecodeScanningDetector implements NonReportingDetector {
 
-    public final InterproceduralCallGraph callGraph;
+    private InterproceduralCallGraph callGraph;
 
     private InterproceduralCallGraphVertex currentVertex;
 

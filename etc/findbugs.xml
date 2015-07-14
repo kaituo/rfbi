@@ -278,10 +278,10 @@
                               <Earlier class="edu.umd.cs.findbugs.detect.BuildInterproceduralCallGraph"/>
                               <Later class="edu.umd.cs.findbugs.detect.DroppedException" />
                     </WithinPass>
-                    <WithinPass>
+                    <SplitPass>
                               <Earlier class="edu.umd.cs.findbugs.detect.BuildInterproceduralCallGraph"/>
                               <Later class="edu.umd.cs.findbugs.detect.FindHEmismatch" />
-                    </WithinPass>
+                    </SplitPass>
                     <SplitPass>
                               <Earlier class="edu.umd.cs.findbugs.detect.Methods"/>
                               <Later class="edu.umd.cs.findbugs.detect.NoteUnconditionalParamDerefs" />

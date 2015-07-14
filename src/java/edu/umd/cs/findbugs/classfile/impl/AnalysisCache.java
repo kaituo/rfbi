@@ -91,6 +91,8 @@ public class AnalysisCache implements IAnalysisCache {
 
     private final Map<?, ?> analysisLocals = Collections.synchronizedMap(new HashMap<Object, Object>());
 
+    //private final InterproceduralCallGraph callGraph;
+
     @Override
     public final Map<?, ?> getAnalysisLocals() {
         return analysisLocals;
@@ -162,6 +164,7 @@ public class AnalysisCache implements IAnalysisCache {
         this.databaseFactoryMap = new HashMap<Class<?>, IDatabaseFactory<?>>();
         this.classAnalysisMap = new HashMap<Class<?>, Map<ClassDescriptor, Object>>();
         this.databaseMap = new HashMap<Class<?>, Object>();
+        //this.callGraph = new InterproceduralCallGraph();
     }
 
     @Override

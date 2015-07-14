@@ -19,8 +19,10 @@
 
 package edu.umd.cs.findbugs.detect;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,13 +49,15 @@ import edu.umd.cs.findbugs.TypeAnnotation;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.EqualsKindSummary;
 import edu.umd.cs.findbugs.ba.XClass;
-import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.XMethod;
+import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
+import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 import edu.umd.cs.findbugs.ba.ch.Subtypes2;
 import edu.umd.cs.findbugs.bcel.BCELUtil;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import edu.umd.cs.findbugs.classfile.ClassDescriptor;
 import edu.umd.cs.findbugs.classfile.DescriptorFactory;
+import edu.umd.cs.findbugs.classfile.Global;
 import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
 import edu.umd.cs.findbugs.util.ClassName;
@@ -114,10 +118,14 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
 
     private final BugReporter bugReporter;
 
+    private final ArrayList<InterproceduralCallGraphVertex> hashCodeCallers;
+
     public FindHEmismatch(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
         nonHashableClasses = new HashSet<String>();
         potentialBugs = new HashMap<String, BugInstance>();
+
+        hashCodeCallers = getHashCodeCallers();
     }
 
     public boolean isHashableClassName(String dottedClassName) {
@@ -289,12 +297,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                     priority++;
                 }
                 BugInstance bug = new BugInstance(this, "HE_EQUALS_USE_HASHCODE", priority).addClass(getDottedClassName());
-                MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(getClassName(), "hashCode",
-                        "()I", false);
-                XMethod calledXMethod = XFactory.createXMethod(called);
-                if (equalsMethod != null) {
-                    bug.addMethod(equalsMethod);
-                }
+
                 bugReporter.reportBug(bug); // (8)
             } else if (!inheritedHashCodeIsFinal && !whereHashCode.startsWith("java.util.Abstract")) {
                 int priority = LOW_PRIORITY;
@@ -656,5 +659,25 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
             }
         }
 
+    }
+
+    public ArrayList<InterproceduralCallGraphVertex> getHashCodeCallers() {
+        InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
+        InterproceduralCallGraphVertex vertex;
+        MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor("java/lang/Object", "hashCode",
+                "()I", false);
+
+        vertex = callGraph.lookupVertex(called);
+        if (vertex == null) {
+            throw new RuntimeException("hashCode at least have some JDK callers");
+        }
+        Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(vertex);
+        ArrayList<InterproceduralCallGraphVertex> res = new ArrayList<>();
+        while(itor.hasNext()) {
+            InterproceduralCallGraphVertex caller = itor.next();
+            res.add(caller);
+            System.out.println(caller.getXmethod().toString());
+        }
+        return res;
     }
 }
