@@ -40,6 +40,7 @@ import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Utility;
 
 import edu.umass.cs.rfbi.cg.DECodeGenerator;
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -345,6 +346,9 @@ public class DroppedException extends PreorderVisitor implements Detector {
                 bugInstance.addSourceLine(srcLine);
                 bugAccumulator.accumulateBug(bugInstance, srcLine);
                 // start code generation
+                if(Config.getInstance().getProperty("de.enabled").equals("false")) {
+                    return;
+                }
                 String bugLoc = srcLine.toString();
                 analyzeMethodCall(code, start, end, causeName, bugLoc);
             }
