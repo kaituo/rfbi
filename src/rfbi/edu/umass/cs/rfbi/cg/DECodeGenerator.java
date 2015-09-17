@@ -1,14 +1,6 @@
 package edu.umass.cs.rfbi.cg;
 
-import java.io.BufferedWriter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Scanner;
-import java.util.Set;
 
 import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
@@ -46,37 +38,37 @@ public class DECodeGenerator extends CodeGenerator {
         return instance;
     }
 
-    public static void writeDE(String destr, String fileName) {
-        FileWriter fstream;
-
-        try {
-            fstream = new FileWriter(fileName,true);
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(destr);
-            out.newLine();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public Set<String> readRFile(String fileName) throws FileNotFoundException {
-        Set<String> delete = new HashSet<String>();
-
-        Scanner dscanner = new Scanner(new FileInputStream(fileName));
-
-        try {
-            while (dscanner.hasNextLine()){
-                delete.add(dscanner.nextLine());
-            }
-        }
-        finally {
-            dscanner.close();
-        }
-
-        return delete;
-    }
+    //    public static void writeDE(String destr, String fileName) {
+    //        FileWriter fstream;
+    //
+    //        try {
+    //            fstream = new FileWriter(fileName,true);
+    //            BufferedWriter out = new BufferedWriter(fstream);
+    //            out.write(destr);
+    //            out.newLine();
+    //            out.close();
+    //        } catch (IOException e) {
+    //            e.printStackTrace();
+    //        }
+    //
+    //    }
+    //
+    //    public Set<String> readRFile(String fileName) throws FileNotFoundException {
+    //        Set<String> delete = new HashSet<String>();
+    //
+    //        Scanner dscanner = new Scanner(new FileInputStream(fileName));
+    //
+    //        try {
+    //            while (dscanner.hasNextLine()){
+    //                delete.add(dscanner.nextLine());
+    //            }
+    //        }
+    //        finally {
+    //            dscanner.close();
+    //        }
+    //
+    //        return delete;
+    //    }
 
     public String generatePart1(boolean isPublic, int i, String cP) {
         StringBuffer sb = new StringBuffer();
@@ -131,26 +123,26 @@ public class DECodeGenerator extends CodeGenerator {
         return sb.toString();
     }
 
-    private Method getMethod(XMethod called) {
-        Class classInst = null;
-        try {
-            classInst = Class.forName(called.getClassDescriptor().getDottedClassName());
-        } catch (ClassNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        if(classInst!=null) {
-            Method[] allMethods = classInst.getDeclaredMethods();
-            for (Method m : allMethods) {
-                String mname = m.getName();
-                if(mname.equals(called.getName())) {
-                    return m;
-                }
-            }
-        }
-
-        return null;
-    }
+    //    private Method getMethod(XMethod called) {
+    //        Class classInst = null;
+    //        try {
+    //            classInst = Class.forName(called.getClassDescriptor().getDottedClassName());
+    //        } catch (ClassNotFoundException e) {
+    //            // TODO Auto-generated catch block
+    //            e.printStackTrace();
+    //        }
+    //        if(classInst!=null) {
+    //            Method[] allMethods = classInst.getDeclaredMethods();
+    //            for (Method m : allMethods) {
+    //                String mname = m.getName();
+    //                if(mname.equals(called.getName())) {
+    //                    return m;
+    //                }
+    //            }
+    //        }
+    //
+    //        return null;
+    //    }
 
     public void generateAspectJ(XMethod called, String causeName, String bugLoc) {
         String[] throwns = called.getThrownExceptions();
