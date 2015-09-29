@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.umass.cs.rfbi.util.RFile;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
@@ -37,8 +38,22 @@ import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
  * @author kaituo
  */
 public class CallGraph {
+
+    static class CallGraphDepth {
+        int distance;
+        private CallGraphDepth() {
+            distance = 0;
+        }
+
+        CallGraphDepth incrementDepth() {
+            distance++;
+            return this;
+        }
+    }
+
     private final Map<String, Map<String, List<String>>> callgraphs;
     private static volatile CallGraph instance = null;
+    private final int defaultCallGraphDepth;
 
     /**
      * ToDo: add other patterns into the map if needed
@@ -46,6 +61,8 @@ public class CallGraph {
     private CallGraph() {
         callgraphs = new HashMap<>();
         callgraphs.put("HE", new HashMap<String, List<String>>()); // HE pattern
+
+        defaultCallGraphDepth = 20;
     }
 
     public static synchronized CallGraph getInstance() {
@@ -55,6 +72,14 @@ public class CallGraph {
         return instance;
     }
 
+    /**
+     * Ger callers of a method; these callers are all application class.
+     * @param className
+     * @param name: method name
+     * @param signature: method signature
+     * @param isStatic
+     * @return
+     */
     public ArrayList<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String
             className, String name, String signature, boolean isStatic) {
         InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
@@ -70,31 +95,49 @@ public class CallGraph {
         ArrayList<InterproceduralCallGraphVertex> res = new ArrayList<>();
         while(itor.hasNext()) {
             InterproceduralCallGraphVertex caller = itor.next();
-            res.add(caller);
-            System.out.println(caller.getXmethod().toString());
+            List<InterproceduralCallGraphVertex> iterRes = new ArrayList<>();
+
+            RFile.writeDE2("================================================", "/home/kaituo/tmp/a");
+            getApplicationCallers(caller, callGraph, iterRes, new CallGraphDepth());
+            res.addAll(iterRes);
+
+        }
+        for(InterproceduralCallGraphVertex v: res) {
+            System.out.println(v.getXmethod().toString());
         }
         return res;
     }
 
     /**
-     * Check caller if it is an application class; if no, go upwards in the call graph and find its caller on the application side
-     * This is actually an DFS.
+     * Check if caller is an application class; if no, go upwards in the call graph and find its caller on the application side
+     * This is actually an DFS.  Compared with getCallers, this method should be used more often.
      * @param caller: dotted class name, to be checked
      * @return null if no application side caller
      */
-    void getApplicationCaller(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
-            List<InterproceduralCallGraphVertex> res) {
-        String type = caller.getXmethod().getClassName();
-        if(type!=null && !AnalysisContext.currentAnalysisContext().isApplicationClass(type)) {
-            Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
-            while(itor.hasNext()) {
-                getApplicationCaller(itor.next(), callGraph, res);
-                if(res.size()>0) {
-                    return;
-                }
-            }
+    void getApplicationCallers(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
+            List<InterproceduralCallGraphVertex> res, CallGraphDepth depth) {
+        if(depth.distance > defaultCallGraphDepth) {
+            return;
         }
-        res.add(caller);
+        String type = caller.getXmethod().getClassName();
+        if(type==null) {
+            throw new NullPointerException("An xmethod has not class name.  This should not happen.");
+        }
+        if(!AnalysisContext.currentAnalysisContext().isApplicationClass(type)) {
+            Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
+            assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.
+            while(itor.hasNext()) {
+                InterproceduralCallGraphVertex newCaller = itor.next();
+                //RFile.writeDE2(newCaller.getXmethod().toString(), "/home/kaituo/tmp/a");
+
+                getApplicationCallers(newCaller, callGraph, res, depth.incrementDepth());
+                //                if(res.size()>0) {
+                //                    return;
+                //                }
+            }
+        } else {
+            res.add(caller);
+        }
     }
 
 
