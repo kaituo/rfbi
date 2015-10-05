@@ -94,6 +94,7 @@ public class HECodeGenerator extends CodeGenerator {
         sb.append(" is called\", \"");
         sb.append(h2RFile);
         sb.append("\");\n");
+        sb.append("\t\treturn super.hashCode();\n");
         sb.append("\t}\n");
         sb.append("}\n");
         return sb.toString();
