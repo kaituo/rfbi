@@ -11,6 +11,7 @@ import java.util.Scanner;
 import java.util.Set;
 
 import edu.umass.cs.rfbi.util.Config;
+import edu.umass.cs.rfbi.util.RFBIUtil;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 
 /**
@@ -102,10 +103,10 @@ public class HECodeGenerator extends CodeGenerator {
         return sb.toString();
     }
 
-    private void generatePERMPhase(String dottedClassName) {
+    public void generatePERMAspectJ(String dottedClassName) {
         // method info
         StringBuffer publicPointCut = new StringBuffer();
-        publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
+        publicPointCut.append(generatePERMPart1(pj++, "edu.umass.cs.rfbi.he"));
         publicPointCut.append(generatePERMPart2(dottedClassName));
 
         publicPointCut.append("}");
@@ -120,28 +121,23 @@ public class HECodeGenerator extends CodeGenerator {
 
         try {
             write(publicPointCut.toString(), fileName);
-            pj++;
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
     }
 
-    private void generateSwitchPhase(String dottedClassName, ArrayList<InterproceduralCallGraphVertex> hashCodeCallers) {
-        for(InterproceduralCallGraphVertex v: hashCodeCallers) {
-            String type = v.getXmethod().toString();
-        }
-        public aspect AAspect {
-            before(A a): call(* A+.foo(..)) && this(a); {
-                // save a to a file
-                TraceWriter.writeState(a);
+    public void generateSwitchAspectJ(ArrayList<InterproceduralCallGraphVertex> callers) {
+        for(InterproceduralCallGraphVertex caller: callers) {
+            try {
+                String[] names = RFBIUtil.splitFullMethodName(caller.getXmethod().toString());
+                generateSwitchPhase(names[0], names[1], "edu.umass.cs.rfbi.he", "HE", pj++, h2RDir);
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
             }
+
         }
     }
 
-    public void generateAspectJ(String dottedClassName, ArrayList<InterproceduralCallGraphVertex> hashCodeCallers) {
-        generatePERMPhase(dottedClassName);
-        generateSwitchPhase(dottedClassName);
-    }
 }
-

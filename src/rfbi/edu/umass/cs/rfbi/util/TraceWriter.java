@@ -35,7 +35,7 @@ public class TraceWriter {
         try {
             // a new file rfbixxx.trace.gz will be created
             traceFile = File.createTempFile("rfbi", ".trace.gz", new File(
-                    Util.getTmpDirectory()));
+                    RFBIUtil.getTmpDirectory()));
             assert (traceFile != null);
 
             fw = new OutputStreamWriter(new GZIPOutputStream(

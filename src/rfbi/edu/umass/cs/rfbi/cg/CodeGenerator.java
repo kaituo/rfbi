@@ -80,5 +80,41 @@ public abstract class CodeGenerator {
         }
     }
 
+    protected void generateSwitchPhase(String className, String methodName, String packageName, String prefix, int index, String dir)
+            throws IOException {
+        StringBuffer sb = new StringBuffer();
+        sb.append("package ");
+        sb.append(packageName);
+        sb.append(";");
+        sb.append("\n\n");
+        sb.append("import edu.umass.cs.rfbi.util.TraceWriter;\n");
+        sb.append("\npublic aspect ");
+        sb.append(prefix);
+        sb.append(index);
+        sb.append(" {");
+        sb.append("\n");
 
+
+        sb.append("\tbefore(");
+        sb.append(className);
+        sb.append(" instance): call(* ");
+        sb.append(className);
+        sb.append("+.");
+        sb.append(methodName);
+        sb.append("(..)) && this(instance); {");
+        sb.append("\n\t\tTraceWriter.writeState(instance);");
+        sb.append("\n\t}");
+        sb.append("\n}");
+
+        StringBuffer filetoWrite = new StringBuffer();
+        filetoWrite.append(dir);
+        filetoWrite.append("/");
+        filetoWrite.append(prefix);
+        filetoWrite.append(index);
+        filetoWrite.append(".aj");
+        String fileName = filetoWrite.toString();
+        create(fileName);
+
+        write(sb.toString(), fileName);
+    }
 }

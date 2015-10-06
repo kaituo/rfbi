@@ -22,7 +22,7 @@ package edu.umass.cs.rfbi.util;
 /**
  * @author kaituo
  */
-public class Util {
+public class RFBIUtil {
     private static String tempdir = null;
     /**
      * return system tmp directory
@@ -40,6 +40,17 @@ public class Util {
         }
 
         return tempdir;
+    }
+
+    /**
+     *
+     * @param fmeth className.methodName
+     * @return [className, methodName]
+     */
+    public static String[] splitFullMethodName(String fmeth) {
+        int lastOccur = fmeth.lastIndexOf(".");
+        return new String[] {fmeth.substring(0, lastOccur), fmeth.substring(lastOccur+1)};
+
     }
 
 }

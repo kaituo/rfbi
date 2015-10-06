@@ -19,7 +19,6 @@
 
 package edu.umd.cs.findbugs.detect;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -51,7 +50,6 @@ import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.EqualsKindSummary;
 import edu.umd.cs.findbugs.ba.XClass;
 import edu.umd.cs.findbugs.ba.XMethod;
-import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 import edu.umd.cs.findbugs.ba.ch.Subtypes2;
 import edu.umd.cs.findbugs.bcel.BCELUtil;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
@@ -116,15 +114,13 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
 
     private final BugReporter bugReporter;
 
-    private final ArrayList<InterproceduralCallGraphVertex> hashCodeCallers;
-
     public FindHEmismatch(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
         nonHashableClasses = new HashSet<String>();
         potentialBugs = new HashMap<String, BugInstance>();
 
-        hashCodeCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
-                "()I", false);
+        HECodeGenerator.getInstance().generateSwitchAspectJ(ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
+                "()I", false));
     }
 
     public boolean isHashableClassName(String dottedClassName) {
@@ -298,7 +294,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                 BugInstance bug = new BugInstance(this, "HE_EQUALS_USE_HASHCODE", priority).addClass(getDottedClassName());
 
                 bugReporter.reportBug(bug); // (8)
-                HECodeGenerator.getInstance().generateAspectJ(getDottedClassName()); // Kaituo
+                HECodeGenerator.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
             } else if (!inheritedHashCodeIsFinal && !whereHashCode.startsWith("java.util.Abstract")) {
                 int priority = LOW_PRIORITY;
 
@@ -328,7 +324,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                 bug.addMethod(equalsMethod);
             }
             bugReporter.reportBug(bug); // (10)
-            HECodeGenerator.getInstance().generateAspectJ(getDottedClassName()); // Kaituo
+            HECodeGenerator.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
         }
         if (!hasEqualsObject && !hasEqualsSelf && !usesDefaultEquals && !obj.isAbstract() && hasFields && inheritedEquals != null
                 && !inheritedEqualsIsFinal && !inheritedEqualsFromAbstractClass
