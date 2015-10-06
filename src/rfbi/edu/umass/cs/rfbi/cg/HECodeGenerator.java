@@ -5,11 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
 import edu.umass.cs.rfbi.util.Config;
+import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 
 /**
  * @author kaituo
@@ -69,7 +71,7 @@ public class HECodeGenerator extends CodeGenerator {
         return delete;
     }
 
-    public String generatePart1(int i, String cP) {
+    public String generatePERMPart1(int i, String cP) {
         StringBuffer sb = new StringBuffer();
         sb.append("package ");
         sb.append(cP);
@@ -84,7 +86,7 @@ public class HECodeGenerator extends CodeGenerator {
         return sb.toString();
     }
 
-    public String generatePart2(String dottedClassName) {
+    public String generatePERMPart2(String dottedClassName) {
         StringBuffer sb = new StringBuffer();
         sb.append("\tpublic int ");
         sb.append(dottedClassName);
@@ -100,11 +102,11 @@ public class HECodeGenerator extends CodeGenerator {
         return sb.toString();
     }
 
-    public void generateAspectJ(String dottedClassName) {
+    private void generatePERMPhase(String dottedClassName) {
         // method info
         StringBuffer publicPointCut = new StringBuffer();
-        publicPointCut.append(generatePart1(pj, "edu.umass.cs.rfbi.he"));
-        publicPointCut.append(generatePart2(dottedClassName));
+        publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
+        publicPointCut.append(generatePERMPart2(dottedClassName));
 
         publicPointCut.append("}");
 
@@ -123,6 +125,23 @@ public class HECodeGenerator extends CodeGenerator {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
+    }
+
+    private void generateSwitchPhase(String dottedClassName, ArrayList<InterproceduralCallGraphVertex> hashCodeCallers) {
+        for(InterproceduralCallGraphVertex v: hashCodeCallers) {
+            String type = v.getXmethod().toString();
+        }
+        public aspect AAspect {
+            before(A a): call(* A+.foo(..)) && this(a); {
+                // save a to a file
+                TraceWriter.writeState(a);
+            }
+        }
+    }
+
+    public void generateAspectJ(String dottedClassName, ArrayList<InterproceduralCallGraphVertex> hashCodeCallers) {
+        generatePERMPhase(dottedClassName);
+        generateSwitchPhase(dottedClassName);
     }
 }
 

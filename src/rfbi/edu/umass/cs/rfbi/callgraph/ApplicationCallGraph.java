@@ -20,12 +20,11 @@
 package edu.umass.cs.rfbi.callgraph;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import edu.umass.cs.rfbi.util.RFile;
+import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
@@ -37,7 +36,7 @@ import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
 /**
  * @author kaituo
  */
-public class CallGraph {
+public class ApplicationCallGraph {
 
     static class CallGraphDepth {
         int distance;
@@ -51,23 +50,19 @@ public class CallGraph {
         }
     }
 
-    private final Map<String, Map<String, List<String>>> callgraphs;
-    private static volatile CallGraph instance = null;
-    private final int defaultCallGraphDepth;
+    public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.callgraph.debug");
+
+    private static volatile ApplicationCallGraph instance = null;
+    private final int defaultSearchDepth = 20;
 
     /**
      * ToDo: add other patterns into the map if needed
      */
-    private CallGraph() {
-        callgraphs = new HashMap<>();
-        callgraphs.put("HE", new HashMap<String, List<String>>()); // HE pattern
+    private ApplicationCallGraph() {}
 
-        defaultCallGraphDepth = 20;
-    }
-
-    public static synchronized CallGraph getInstance() {
+    public static synchronized ApplicationCallGraph getInstance() {
         if(instance==null) {
-            instance = new CallGraph();
+            instance = new ApplicationCallGraph();
         }
         return instance;
     }
@@ -89,7 +84,7 @@ public class CallGraph {
 
         vertex = callGraph.lookupVertex(called);
         if (vertex == null) {
-            throw new RuntimeException("hashCode at least have some JDK callers");
+            throw new RuntimeException("Cannot find a caller for " + called.toString());
         }
         Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(vertex);
         ArrayList<InterproceduralCallGraphVertex> res = new ArrayList<>();
@@ -102,9 +97,12 @@ public class CallGraph {
             res.addAll(iterRes);
 
         }
-        for(InterproceduralCallGraphVertex v: res) {
-            System.out.println(v.getXmethod().toString());
+        if(DEBUG) {
+            for(InterproceduralCallGraphVertex v: res) {
+                System.out.println(v.getXmethod().toString());
+            }
         }
+
         return res;
     }
 
@@ -116,7 +114,7 @@ public class CallGraph {
      */
     void getApplicationCallers(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
             List<InterproceduralCallGraphVertex> res, CallGraphDepth depth) {
-        if(depth.distance > defaultCallGraphDepth) {
+        if(depth.distance > defaultSearchDepth) {
             return;
         }
         String type = caller.getXmethod().getClassName();

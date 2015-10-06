@@ -35,7 +35,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Signature;
 
-import edu.umass.cs.rfbi.callgraph.CallGraph;
+import edu.umass.cs.rfbi.callgraph.ApplicationCallGraph;
 import edu.umass.cs.rfbi.cg.HECodeGenerator;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
@@ -123,7 +123,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
         nonHashableClasses = new HashSet<String>();
         potentialBugs = new HashMap<String, BugInstance>();
 
-        hashCodeCallers = CallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
+        hashCodeCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
                 "()I", false);
     }
 

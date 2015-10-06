@@ -18,18 +18,24 @@
  */
 package edu.umd.cs.findbugs.detect;
 
+import java.util.Set;
+
 import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Method;
 
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.NonReportingDetector;
+import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
+import edu.umd.cs.findbugs.ba.ch.Subtypes2;
 import edu.umd.cs.findbugs.ba.jsr305.Analysis;
+import edu.umd.cs.findbugs.classfile.ClassDescriptor;
+import edu.umd.cs.findbugs.classfile.DescriptorFactory;
 import edu.umd.cs.findbugs.classfile.Global;
 import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 
@@ -86,10 +92,47 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
             XMethod calledXMethod = XFactory.createXMethod(called);
             InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
             callGraph.createEdge(currentVertex, calledVertex);
+            addEdges4Subtypes(called, getOpcode() == INVOKESTATIC); // Kaituo
             break;
         default:
             break;
         }
+    }
+
+    /**
+     * m
+          ...
+          invoke xxx T.m2
+
+        ==>
+
+        foreach t in T.getSubTypes():
+            t.getMethod(m2).addPossibleCaller(m)
+
+     * @param called
+     * @param isStatic
+     * @author Kaituo
+     */
+    private void addEdges4Subtypes(MethodDescriptor called, boolean isStatic) {
+        Subtypes2 subtypes2 = AnalysisContext.currentAnalysisContext().getSubtypes2();
+
+        try {
+            Set<ClassDescriptor> mySubtypes = subtypes2.getSubtypes(called.getClassDescriptor());
+            for (ClassDescriptor c : mySubtypes) {
+                if (c.equals(getClassDescriptor())) {
+                    continue;
+                }
+                MethodDescriptor called4Subtype = DescriptorFactory.instance().getMethodDescriptor(c.getClassName(), called.getName(),
+                        called.getSignature(), isStatic);
+                XMethod called4SubtypeXMethod = XFactory.createXMethod(called4Subtype);
+                InterproceduralCallGraphVertex called4SubtypeVertex = findVertex(called4SubtypeXMethod);
+                callGraph.createEdge(currentVertex, called4SubtypeVertex);
+            }
+        } catch (ClassNotFoundException e) {
+            AnalysisContext.logError("Error while create call graph edges for " + called.toString());
+            assert false;
+        }
+
     }
 
     /**
