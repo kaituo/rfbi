@@ -11,7 +11,8 @@ import java.util.Scanner;
 import java.util.Set;
 
 import edu.umass.cs.rfbi.util.Config;
-import edu.umass.cs.rfbi.util.RFBIUtil;
+import edu.umd.cs.findbugs.ba.AnalysisContext;
+import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 
 /**
@@ -28,8 +29,10 @@ public class HECodeGenerator extends CodeGenerator {
         /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");*/
         h2RDir = Config.getInstance().getProperty("he.codegen.folder");
         h2RFile = Config.getInstance().getProperty("he.runtime.record");
-        create(h2RFile);
-        //create(filePublic);
+        if(!createFolder(h2RDir) || !createFile(h2RFile)) {
+            AnalysisContext.logError("Cannot create folders or files for HE code generation.");
+            assert false;
+        }
         pj = 1;
     }
 
@@ -117,7 +120,10 @@ public class HECodeGenerator extends CodeGenerator {
         filetoWrite.append(pj);
         filetoWrite.append(".aj");
         String fileName = filetoWrite.toString();
-        create(fileName);
+        if(!createFile(fileName)) {
+            AnalysisContext.logError("Cannot create file for HE code generation.");
+            assert false;
+        }
 
         try {
             write(publicPointCut.toString(), fileName);
@@ -130,8 +136,9 @@ public class HECodeGenerator extends CodeGenerator {
     public void generateSwitchAspectJ(ArrayList<InterproceduralCallGraphVertex> callers) {
         for(InterproceduralCallGraphVertex caller: callers) {
             try {
-                String[] names = RFBIUtil.splitFullMethodName(caller.getXmethod().toString());
-                generateSwitchPhase(names[0], names[1], "edu.umass.cs.rfbi.he", "HE", pj++, h2RDir);
+                XMethod xmethod = caller.getXmethod();
+                //String[] names = RFBIUtil.splitFullMethodName(caller.getXmethod().toString());
+                generateSwitchPhase(xmethod.getClassName(), xmethod.getName(), "edu.umass.cs.rfbi.he", "HE", pj++, h2RDir);
             } catch (IOException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();

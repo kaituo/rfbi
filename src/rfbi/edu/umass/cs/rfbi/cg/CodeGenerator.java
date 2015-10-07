@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
+import org.apache.commons.io.FileUtils;
+
 import edu.umass.cs.rfbi.util.RFile;
 import edu.umd.cs.findbugs.BugInstance;
+import edu.umd.cs.findbugs.ba.AnalysisContext;
 
 /**
  * @author Kaituo
@@ -51,7 +54,36 @@ public abstract class CodeGenerator {
         return foul.substring(0, lastOne+1);
     }
 
-    public void create(String file) {
+    public boolean createFolder(String dir) {
+        File f = null;
+        boolean bool = false;
+
+        try{
+            // create new folders
+            f = new File(dir);
+
+            // tests if folder exists
+            bool = f.exists();
+
+            // prints
+            //System.out.println("File exists: "+bool);
+
+            if(bool == true)
+            {
+                // delete() invoked
+                FileUtils.deleteDirectory(f);
+            }
+            // create new file in the system
+            f.mkdirs();
+            return true;
+        }catch(Exception e){
+            // if any error occurs
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean createFile(String file) {
         File f = null;
         boolean bool = false;
 
@@ -74,10 +106,12 @@ public abstract class CodeGenerator {
             }
             // create new file in the system
             f.createNewFile();
+            return true;
         }catch(Exception e){
             // if any error occurs
             e.printStackTrace();
         }
+        return false;
     }
 
     protected void generateSwitchPhase(String className, String methodName, String packageName, String prefix, int index, String dir)
@@ -113,7 +147,10 @@ public abstract class CodeGenerator {
         filetoWrite.append(index);
         filetoWrite.append(".aj");
         String fileName = filetoWrite.toString();
-        create(fileName);
+        if(!createFile(fileName)) {
+            AnalysisContext.logError("Cannot create file for code generation.");
+            assert false;
+        }
 
         write(sb.toString(), fileName);
     }

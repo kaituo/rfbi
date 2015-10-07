@@ -26,7 +26,10 @@ public class DECodeGenerator extends CodeGenerator {
         //filePublic = "./DyFile/DE/DE2.aj";
         d2RDir = Config.getInstance().getProperty("de.codegen.folder");
         d2RFile = Config.getInstance().getProperty("de.runtime.record");
-        create(d2RFile);
+        if(!createFolder(d2RDir) || !createFile(d2RFile)) {
+            AnalysisContext.logError("Cannot create folders or files for DE code generation.");
+            assert false;
+        }
         //create(filePublic);
         pj = 1;
     }
@@ -187,7 +190,11 @@ public class DECodeGenerator extends CodeGenerator {
         filetoWrite.append(pj);
         filetoWrite.append(".aj");
         String fileName = filetoWrite.toString();
-        create(fileName);
+
+        if(!createFile(fileName)) {
+            AnalysisContext.logError("Cannot create file for DE code generation.");
+            assert false;
+        }
 
         try {
             write(publicPointCut.toString(), fileName);
