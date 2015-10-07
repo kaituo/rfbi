@@ -114,10 +114,16 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
      * @author Kaituo
      */
     private void addEdges4Subtypes(MethodDescriptor called, boolean isStatic) {
+        ClassDescriptor calledClass = called.getClassDescriptor();
+        // if the class is an array like "[Ljava.lang.Object", then we are not interested to continue
+        if(calledClass.isArray()) {
+            return;
+        }
+
         Subtypes2 subtypes2 = AnalysisContext.currentAnalysisContext().getSubtypes2();
 
         try {
-            Set<ClassDescriptor> mySubtypes = subtypes2.getSubtypes(called.getClassDescriptor());
+            Set<ClassDescriptor> mySubtypes = subtypes2.getSubtypes(calledClass);
             for (ClassDescriptor c : mySubtypes) {
                 if (c.equals(getClassDescriptor())) {
                     continue;
