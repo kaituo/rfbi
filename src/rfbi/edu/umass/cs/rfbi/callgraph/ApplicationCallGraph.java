@@ -19,9 +19,9 @@
 
 package edu.umass.cs.rfbi.callgraph;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 import edu.umass.cs.rfbi.util.RFile;
 import edu.umd.cs.findbugs.SystemProperties;
@@ -53,7 +53,7 @@ public class ApplicationCallGraph {
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.callgraph.debug");
 
     private static volatile ApplicationCallGraph instance = null;
-    private final int defaultSearchDepth = 20;
+    //private final int defaultSearchDepth = 20;
 
     /**
      * ToDo: add other patterns into the map if needed
@@ -68,14 +68,17 @@ public class ApplicationCallGraph {
     }
 
     /**
-     * Ger callers of a method; these callers are all application class.
+     * Get callers of a method; these callers are all application class. The difference between getCallers
+     * and getApplicationCallers is that the former is a list of direct callers we want to collect while the latter
+     * is sth we want to explore further if one of the direct callers is not an application class.
+     *
      * @param className
      * @param name: method name
      * @param signature: method signature
      * @param isStatic
      * @return
      */
-    public ArrayList<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String
+    public Set<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String
             className, String name, String signature, boolean isStatic) {
         InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
         InterproceduralCallGraphVertex vertex;
@@ -87,16 +90,20 @@ public class ApplicationCallGraph {
             throw new RuntimeException("Cannot find a caller for " + called.toString());
         }
         Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(vertex);
-        ArrayList<InterproceduralCallGraphVertex> res = new ArrayList<>();
+        Set<InterproceduralCallGraphVertex> res = new HashSet<>();
+        HashSet<InterproceduralCallGraphVertex> cache = new HashSet<>();
         while(itor.hasNext()) {
             InterproceduralCallGraphVertex caller = itor.next();
-            List<InterproceduralCallGraphVertex> iterRes = new ArrayList<>();
+            Set<InterproceduralCallGraphVertex> iterRes = new HashSet<>();
+            if(DEBUG) {
+                RFile.writeDE2("================================================", "/home/kaituo/tmp/a");
+            }
 
-            RFile.writeDE2("================================================", "/home/kaituo/tmp/a");
-            getApplicationCallers(caller, callGraph, iterRes, new CallGraphDepth());
+            getApplicationCallers(caller, callGraph, iterRes, cache);
             res.addAll(iterRes);
 
         }
+
         if(DEBUG) {
             for(InterproceduralCallGraphVertex v: res) {
                 System.out.println(v.getXmethod().toString());
@@ -113,10 +120,10 @@ public class ApplicationCallGraph {
      * @return null if no application side caller
      */
     void getApplicationCallers(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
-            List<InterproceduralCallGraphVertex> res, CallGraphDepth depth) {
-        if(depth.distance > defaultSearchDepth) {
-            return;
-        }
+            Set<InterproceduralCallGraphVertex> res, /*CallGraphDepth depth, */ Set<InterproceduralCallGraphVertex> visited) {
+        //        if(depth.distance > defaultSearchDepth) {
+        //            return;
+        //        }
         String type = caller.getXmethod().getClassName();
         if(type==null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
@@ -125,13 +132,16 @@ public class ApplicationCallGraph {
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
             assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.
             while(itor.hasNext()) {
+
                 InterproceduralCallGraphVertex newCaller = itor.next();
                 //RFile.writeDE2(newCaller.getXmethod().toString(), "/home/kaituo/tmp/a");
-
-                getApplicationCallers(newCaller, callGraph, res, depth.incrementDepth());
-                //                if(res.size()>0) {
-                //                    return;
-                //                }
+                if (!visited.contains(newCaller)) {
+                    visited.add(newCaller);
+                    getApplicationCallers(newCaller, callGraph, res, visited);
+                }
+                if(res.size()>0) {
+                    return;
+                }
             }
         } else {
             res.add(caller);

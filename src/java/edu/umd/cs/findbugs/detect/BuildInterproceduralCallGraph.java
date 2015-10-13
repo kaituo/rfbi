@@ -92,7 +92,7 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
             XMethod calledXMethod = XFactory.createXMethod(called);
             InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
             callGraph.createEdge(currentVertex, calledVertex);
-            addEdges4Subtypes(called, getOpcode() == INVOKESTATIC); // Kaituo
+            addEdges4Subtypes(called, seen); // Kaituo
             break;
         default:
             break;
@@ -113,7 +113,11 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
      * @param isStatic
      * @author Kaituo
      */
-    private void addEdges4Subtypes(MethodDescriptor called, boolean isStatic) {
+    private void addEdges4Subtypes(MethodDescriptor called, int seen) {
+        // Only invokevirtual and invokeinterface has dynamic calls (subtype is possible)
+        if(seen==Constants.INVOKESTATIC || seen==Constants.INVOKESPECIAL) {
+            return;
+        }
         ClassDescriptor calledClass = called.getClassDescriptor();
         // if the class is an array like "[Ljava.lang.Object", then we are not interested to continue
         if(calledClass.isArray()) {
@@ -128,8 +132,9 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
                 if (c.equals(getClassDescriptor())) {
                     continue;
                 }
+                // the last argument is false because this method cannot be static
                 MethodDescriptor called4Subtype = DescriptorFactory.instance().getMethodDescriptor(c.getClassName(), called.getName(),
-                        called.getSignature(), isStatic);
+                        called.getSignature(), false);
                 XMethod called4SubtypeXMethod = XFactory.createXMethod(called4Subtype);
                 InterproceduralCallGraphVertex called4SubtypeVertex = findVertex(called4SubtypeXMethod);
                 callGraph.createEdge(currentVertex, called4SubtypeVertex);

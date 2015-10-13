@@ -5,7 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -133,7 +132,7 @@ public class HECodeGenerator extends CodeGenerator {
         }
     }
 
-    public void generateSwitchAspectJ(ArrayList<InterproceduralCallGraphVertex> callers) {
+    public void generateSwitchAspectJ(Set<InterproceduralCallGraphVertex> callers) {
         for(InterproceduralCallGraphVertex caller: callers) {
             try {
                 XMethod xmethod = caller.getXmethod();

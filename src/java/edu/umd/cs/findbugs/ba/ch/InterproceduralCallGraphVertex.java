@@ -45,4 +45,45 @@ public class InterproceduralCallGraphVertex extends AbstractVertex<Interprocedur
     public XMethod getXmethod() {
         return xmethod;
     }
+
+    /**
+     * hashCode method used in rfbi's ApplicationCallGraph
+     * @author kaituo
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((xmethod == null) ? 0 : xmethod.getMethodDescriptor().hashCode());
+        return result;
+    }
+
+    /**
+     * equals method used in rfbi's ApplicationCallGraph
+     * @author kaituo
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        InterproceduralCallGraphVertex other = (InterproceduralCallGraphVertex) obj;
+        if (xmethod == null) {
+            if (other.xmethod != null) {
+                return false;
+            }
+        } else if (!xmethod.getMethodDescriptor().equals(other.xmethod.getMethodDescriptor())) {
+            return false;
+        }
+
+        return true;
+    }
+
+
 }
