@@ -33,8 +33,9 @@ public class TraceWriter {
         File traceFile = null;
         OutputStreamWriter fw;
         try {
-            // a new file rfbixxx.trace.gz will be created
-            traceFile = File.createTempFile("rfbi", ".trace.gz", new File(
+            // a new file rfbia.b.c$xxx.trace.gz will be created
+            // a.b.c is the class name
+            traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(
                     RFBIUtil.getTmpDirectory()));
             assert (traceFile != null);
 
