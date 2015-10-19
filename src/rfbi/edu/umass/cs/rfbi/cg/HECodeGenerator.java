@@ -10,14 +10,12 @@ import java.util.Scanner;
 import java.util.Set;
 
 import edu.umass.cs.rfbi.util.Config;
-import edu.umd.cs.findbugs.ba.AnalysisContext;
-import edu.umd.cs.findbugs.ba.XMethod;
-import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
+import edu.umass.cs.rfbi.util.RFBIUtil;
 
 /**
  * @author kaituo
  */
-public class HECodeGenerator extends CodeGenerator {
+public class HECodeGenerator implements PERMCG {
     public String h2RFile, h2RDir;
     //public static String filePublic;
     private static HECodeGenerator instance = null;
@@ -26,12 +24,11 @@ public class HECodeGenerator extends CodeGenerator {
     protected HECodeGenerator() {
         super();
         /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");*/
-        h2RDir = Config.getInstance().getProperty("he.codegen.folder");
+        h2RDir = Config.getInstance().getProperty("he.codegen.perm");
         h2RFile = Config.getInstance().getProperty("he.runtime.record");
-        if(!createFolder(h2RDir) || !createFile(h2RFile)) {
-            AnalysisContext.logError("Cannot create folders or files for HE code generation.");
-            assert false;
-        }
+        RFBIUtil.createFolder(h2RDir);
+        RFBIUtil.createFile(h2RFile);
+
         pj = 1;
     }
 
@@ -119,31 +116,13 @@ public class HECodeGenerator extends CodeGenerator {
         filetoWrite.append(pj);
         filetoWrite.append(".aj");
         String fileName = filetoWrite.toString();
-        if(!createFile(fileName)) {
-            AnalysisContext.logError("Cannot create file for HE code generation.");
-            assert false;
-        }
+        RFBIUtil.createFile(fileName);
 
         try {
-            write(publicPointCut.toString(), fileName);
+            RFBIUtil.write(publicPointCut.toString(), fileName);
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
         }
     }
-
-    public void generateSwitchAspectJ(Set<InterproceduralCallGraphVertex> callers) {
-        for(InterproceduralCallGraphVertex caller: callers) {
-            try {
-                XMethod xmethod = caller.getXmethod();
-                //String[] names = RFBIUtil.splitFullMethodName(caller.getXmethod().toString());
-                generateSwitchPhase(xmethod.getClassName(), xmethod.getName(), "edu.umass.cs.rfbi.he", "HE", pj++, h2RDir);
-            } catch (IOException e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
-            }
-
-        }
-    }
-
 }

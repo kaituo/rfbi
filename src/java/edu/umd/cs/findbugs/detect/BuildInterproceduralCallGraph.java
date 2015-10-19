@@ -23,6 +23,8 @@ import java.util.Set;
 import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Method;
 
+import edu.umass.cs.rfbi.cg.SwitchCG;
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.NonReportingDetector;
@@ -53,6 +55,8 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
     private InterproceduralCallGraph callGraph;
 
     private InterproceduralCallGraphVertex currentVertex;
+
+    int count = 0;
 
     /**
      * Constructor.
@@ -88,6 +92,7 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
         case Constants.INVOKEVIRTUAL:
         case Constants.INVOKEINTERFACE:
         case Constants.INVOKESPECIAL:
+            count++;
             MethodDescriptor called = getMethodDescriptorOperand();
             XMethod calledXMethod = XFactory.createXMethod(called);
             InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
@@ -170,5 +175,11 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
             return;
         }
         Global.getAnalysisCache().eagerlyPutDatabase(InterproceduralCallGraph.class, callGraph);
+        if(Boolean.parseBoolean(Config.getInstance().getProperty("switch.enabled"))) {
+            System.out.println("BuildInterprocedural's sawOpCode has been called " + count);
+            SwitchCG scg = new SwitchCG();
+            scg.generateAllSwitchAspects();
+            //TraceWriter.writeState(callGraph);
+        }
     }
 }

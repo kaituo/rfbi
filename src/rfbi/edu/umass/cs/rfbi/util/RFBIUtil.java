@@ -19,6 +19,16 @@
 
 package edu.umass.cs.rfbi.util;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+
+import org.apache.commons.io.FileUtils;
+
+import edu.umd.cs.findbugs.ba.AnalysisContext;
+
 /**
  * @author kaituo
  */
@@ -51,6 +61,98 @@ public class RFBIUtil {
         int lastOccur = fmeth.lastIndexOf(".");
         return new String[] {fmeth.substring(0, lastOccur), fmeth.substring(lastOccur+1)};
 
+    }
+
+    public static File createFolder(String dir) {
+        File f = null;
+        boolean bool = false;
+
+        try{
+            // create new folders
+            f = new File(dir);
+
+            // tests if folder exists
+            bool = f.exists();
+
+            // prints
+            //System.out.println("File exists: "+bool);
+
+            if(bool == true)
+            {
+                // delete() invoked
+                FileUtils.deleteDirectory(f);
+            }
+            // create new file in the system
+            f.mkdirs();
+            return f;
+        }catch(Exception e){
+            AnalysisContext.logError("Cannot create folders.");
+            assert false;
+        }
+        return null;
+    }
+
+    public static File createFile(String file) {
+        File f = null;
+        boolean bool = false;
+
+        try{
+            // create new files
+            f = new File(file);
+
+
+
+            // tests if file exists
+            bool = f.exists();
+
+            // prints
+            //System.out.println("File exists: "+bool);
+
+            if(bool == true)
+            {
+                // delete() invoked
+                f.delete();
+            }
+            // create new file in the system
+            f.createNewFile();
+            return f;
+        }catch(Exception e){
+            AnalysisContext.logError("Cannot create a file.");
+            assert false;
+        }
+        return null;
+    }
+
+    //    public void dyCheck(BugInstance bi) { }
+    //
+    //    public void dyCheck(String bi, String foul, String pN) { }
+    //
+    //    public void dyCheck(BugInstance bi, String foul, String pN) { }
+
+    public String getPackageName(String foul, boolean slash) {
+        if(slash) {
+            int lastOne = foul.lastIndexOf("/");
+            return foul.substring(0, lastOne+1);
+        } else {
+            int lastOne = foul.lastIndexOf(".");
+            return foul.substring(0, lastOne);
+        }
+
+    }
+
+    public String getPackageNameSlash(String foul) {
+        int lastOne = foul.lastIndexOf("/");
+        return foul.substring(0, lastOne+1);
+    }
+
+    /** Write fixed content to the given file. */
+    public static void write(String code, String ajFileName) throws IOException  {
+        Writer out = new OutputStreamWriter(new FileOutputStream(ajFileName));
+        try {
+            out.write(code);
+        } finally {
+            out.close();
+        }
     }
 
 }

@@ -119,8 +119,10 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
         nonHashableClasses = new HashSet<String>();
         potentialBugs = new HashMap<String, BugInstance>();
 
-        HECodeGenerator.getInstance().generateSwitchAspectJ(ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
-                "()I", false));
+        // Kaituo
+        // HECodeGenerator.getInstance().generateSwitchAspectJ(ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
+        //        "()I", false));
+        ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
     }
 
     public boolean isHashableClassName(String dottedClassName) {

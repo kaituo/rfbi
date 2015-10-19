@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import edu.umass.cs.rfbi.util.RFile;
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
@@ -38,17 +37,17 @@ import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
  */
 public class ApplicationCallGraph {
 
-    static class CallGraphDepth {
-        int distance;
-        private CallGraphDepth() {
-            distance = 0;
-        }
-
-        CallGraphDepth incrementDepth() {
-            distance++;
-            return this;
-        }
-    }
+    //    static class CallGraphDepth {
+    //        int distance;
+    //        private CallGraphDepth() {
+    //            distance = 0;
+    //        }
+    //
+    //        CallGraphDepth incrementDepth() {
+    //            distance++;
+    //            return this;
+    //        }
+    //    }
 
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.callgraph.debug");
 
@@ -92,19 +91,18 @@ public class ApplicationCallGraph {
         Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(vertex);
         Set<InterproceduralCallGraphVertex> res = new HashSet<>();
         HashSet<InterproceduralCallGraphVertex> cache = new HashSet<>();
+        int count = 0;
         while(itor.hasNext()) {
             InterproceduralCallGraphVertex caller = itor.next();
             Set<InterproceduralCallGraphVertex> iterRes = new HashSet<>();
-            if(DEBUG) {
-                RFile.writeDE2("================================================", "/home/kaituo/tmp/a");
-            }
 
             getApplicationCallers(caller, callGraph, iterRes, cache);
             res.addAll(iterRes);
-
+            count++;
         }
 
         if(DEBUG) {
+            System.out.println("The size of the caller: " + count);
             for(InterproceduralCallGraphVertex v: res) {
                 System.out.println(v.getXmethod().toString());
             }

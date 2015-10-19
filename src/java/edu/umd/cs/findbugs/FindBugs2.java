@@ -39,6 +39,7 @@ import javax.annotation.Nonnull;
 import org.apache.bcel.classfile.ClassFormatException;
 import org.dom4j.DocumentException;
 
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.asm.FBClassReader;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.AnalysisFeatures;
@@ -988,6 +989,11 @@ public class FindBugs2 implements IFindBugsEngine {
                 // The first pass is generally a non-reporting pass which
                 // gathers information about referenced classes.
                 boolean isNonReportingFirstPass = multiplePasses && passCount == 0;
+                // Kaituo: If it is used for switch phase, we want to analyze all classes to establish
+                // an accurate call graph.
+                if(Boolean.parseBoolean(Config.getInstance().getProperty("switch.enabled"))) {
+                    isNonReportingFirstPass = true;
+                }
 
                 // Instantiate the detectors
                 Detector2[] detectorList = pass.instantiateDetector2sInPass(bugReporter);
@@ -1033,6 +1039,7 @@ public class FindBugs2 implements IFindBugsEngine {
                 currentAnalysisContext.updateDatabases(passCount);
 
                 progress.startAnalysis(classCollection.size());
+
                 int count = 0;
                 Global.getAnalysisCache().purgeAllMethodAnalysis();
                 Global.getAnalysisCache().purgeClassAnalysis(FBClassReader.class);
