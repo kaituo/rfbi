@@ -34,7 +34,6 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Signature;
 
-import edu.umass.cs.rfbi.callgraph.ApplicationCallGraph;
 import edu.umass.cs.rfbi.cg.HEPERMCG;
 import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugInstance;
@@ -123,7 +122,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
         // Kaituo
         // HECodeGenerator.getInstance().generateSwitchAspectJ(ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode",
         //        "()I", false));
-        ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
+        //ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
     }
 
     public boolean isHashableClassName(String dottedClassName) {

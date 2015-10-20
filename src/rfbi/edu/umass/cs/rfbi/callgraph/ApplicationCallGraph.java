@@ -25,6 +25,7 @@ import java.util.Set;
 
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
+import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 import edu.umd.cs.findbugs.classfile.DescriptorFactory;
@@ -122,11 +123,15 @@ public class ApplicationCallGraph {
         //        if(depth.distance > defaultSearchDepth) {
         //            return;
         //        }
-        String type = caller.getXmethod().getClassName();
+        XMethod callerMeth = caller.getXmethod();
+        String type = callerMeth.getClassName();
+        int numParams = callerMeth.getNumParams();
+
         if(type==null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if(!AnalysisContext.currentAnalysisContext().isApplicationClass(type)) {
+        if(numParams<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)) {
+
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
             assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.
             while(itor.hasNext()) {
