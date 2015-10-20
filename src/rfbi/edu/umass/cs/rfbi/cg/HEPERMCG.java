@@ -15,26 +15,26 @@ import edu.umass.cs.rfbi.util.RFBIUtil;
 /**
  * @author kaituo
  */
-public class HECodeGenerator implements PERMCG {
+public class HEPERMCG implements PERMCG {
     public String h2RFile, h2RDir;
     //public static String filePublic;
-    private static HECodeGenerator instance = null;
+    private static HEPERMCG instance = null;
     private int pj;
 
-    protected HECodeGenerator() {
+    protected HEPERMCG() {
         super();
         /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");*/
-        h2RDir = Config.getInstance().getProperty("he.codegen.perm");
-        h2RFile = Config.getInstance().getProperty("he.runtime.record");
+        h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
+        h2RFile = Config.getInstance().getStringProperty("he.runtime.record");
         RFBIUtil.createFolder(h2RDir);
         RFBIUtil.createFile(h2RFile);
 
         pj = 1;
     }
 
-    public static HECodeGenerator getInstance() {
+    public static HEPERMCG getInstance() {
         if(instance == null) {
-            instance = new HECodeGenerator();
+            instance = new HEPERMCG();
         }
         return instance;
     }
@@ -103,6 +103,9 @@ public class HECodeGenerator implements PERMCG {
     }
 
     public void generatePERMAspectJ(String dottedClassName) {
+        assert(Config.getInstance().getBooleanProperty("perm.enabled"));
+        assert(Config.getInstance().getBooleanProperty("he.perm.phase"));
+
         // method info
         StringBuffer publicPointCut = new StringBuffer();
         publicPointCut.append(generatePERMPart1(pj++, "edu.umass.cs.rfbi.he"));

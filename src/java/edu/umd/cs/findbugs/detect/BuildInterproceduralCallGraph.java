@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.bcel.Constants;
 import org.apache.bcel.classfile.Method;
 
-import edu.umass.cs.rfbi.cg.SwitchCG;
+import edu.umass.cs.rfbi.cg.SwitchAspectsGenerator;
 import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
@@ -175,9 +175,9 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
             return;
         }
         Global.getAnalysisCache().eagerlyPutDatabase(InterproceduralCallGraph.class, callGraph);
-        if(Boolean.parseBoolean(Config.getInstance().getProperty("switch.enabled"))) {
+        if(Config.getInstance().getBooleanProperty("switch.enabled")) {
             System.out.println("BuildInterprocedural's sawOpCode has been called " + count);
-            SwitchCG scg = new SwitchCG();
+            SwitchAspectsGenerator scg = new SwitchAspectsGenerator();
             scg.generateAllSwitchAspects();
             //TraceWriter.writeState(callGraph);
         }

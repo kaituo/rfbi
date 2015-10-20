@@ -39,7 +39,7 @@ import org.apache.bcel.classfile.LineNumber;
 import org.apache.bcel.classfile.LineNumberTable;
 import org.apache.bcel.classfile.Utility;
 
-import edu.umass.cs.rfbi.cg.DECodeGenerator;
+import edu.umass.cs.rfbi.cg.DEPERMCG;
 import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
@@ -346,11 +346,9 @@ public class DroppedException extends PreorderVisitor implements Detector {
                 bugInstance.addSourceLine(srcLine);
                 bugAccumulator.accumulateBug(bugInstance, srcLine);
                 // start code generation
-                if(Config.getInstance().getProperty("de.enabled").equals("false")) {
-                    return;
+                if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("de.perm.phase")) {
+                    analyzeMethodCall(code, start, end, causeName, srcLine.toString());
                 }
-                String bugLoc = srcLine.toString();
-                analyzeMethodCall(code, start, end, causeName, bugLoc);
             }
         }
     }
@@ -539,7 +537,7 @@ public class DroppedException extends PreorderVisitor implements Detector {
                     MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(classConstantOperand, nameConstantOperand,
                             sigConstantOperand, opcode == INVOKESTATIC);
                     XMethod calledXMethod = XFactory.createXMethod(called);
-                    DECodeGenerator.getInstance().generateAspectJ(calledXMethod, causeName, bugLoc);
+                    DEPERMCG.getInstance().generateAspectJ(calledXMethod, causeName, bugLoc);
                     break;
                 default:
                     break;

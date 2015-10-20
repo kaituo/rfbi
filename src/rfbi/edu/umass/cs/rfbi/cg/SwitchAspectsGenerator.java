@@ -13,17 +13,15 @@ import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 /**
  * @author Kaituo
  */
-public class SwitchCG {
+public class SwitchAspectsGenerator {
     private int HEPj;
     private final String HEDir;
     //    public RFile rf;
     //
-    public SwitchCG() {
+    public SwitchAspectsGenerator() {
         HEPj = 0;
-        HEDir = Config.getInstance().getProperty("he.codegen.switch");
+        HEDir = Config.getInstance().getStringProperty("he.codegen.switch");
     }
-
-
 
     //    public void dyCheck(BugInstance bi) { }
     //
@@ -79,7 +77,8 @@ public class SwitchCG {
     }
 
     public void generateAllSwitchAspects() {
-        if(Config.getInstance().getProperty("he.switch.phase")!=null) {
+        assert Config.getInstance().getBooleanProperty("switch.enabled");
+        if(Config.getInstance().getBooleanProperty("he.switch.phase")) {
             // Incomplete analyze
             //String[][] HEPerms = analyze(null);
             //generateSwitchAspects(HEPerms, "edu.umass.cs.rfbi.he", "HE");

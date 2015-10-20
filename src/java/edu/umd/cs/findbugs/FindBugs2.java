@@ -991,7 +991,7 @@ public class FindBugs2 implements IFindBugsEngine {
                 boolean isNonReportingFirstPass = multiplePasses && passCount == 0;
                 // Kaituo: If it is used for switch phase, we want to analyze all classes to establish
                 // an accurate call graph.
-                if(Boolean.parseBoolean(Config.getInstance().getProperty("switch.enabled"))) {
+                if(Config.getInstance().getBooleanProperty("switch.enabled")) {
                     isNonReportingFirstPass = true;
                 }
 

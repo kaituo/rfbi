@@ -35,7 +35,8 @@ import org.apache.bcel.classfile.Method;
 import org.apache.bcel.classfile.Signature;
 
 import edu.umass.cs.rfbi.callgraph.ApplicationCallGraph;
-import edu.umass.cs.rfbi.cg.HECodeGenerator;
+import edu.umass.cs.rfbi.cg.HEPERMCG;
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.ClassAnnotation;
@@ -296,7 +297,10 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                 BugInstance bug = new BugInstance(this, "HE_EQUALS_USE_HASHCODE", priority).addClass(getDottedClassName());
 
                 bugReporter.reportBug(bug); // (8)
-                HECodeGenerator.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
+                if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
+                    HEPERMCG.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
+                }
+
             } else if (!inheritedHashCodeIsFinal && !whereHashCode.startsWith("java.util.Abstract")) {
                 int priority = LOW_PRIORITY;
 
@@ -326,7 +330,9 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                 bug.addMethod(equalsMethod);
             }
             bugReporter.reportBug(bug); // (10)
-            HECodeGenerator.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
+            if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
+                HEPERMCG.getInstance().generatePERMAspectJ(getDottedClassName()); // Kaituo
+            }
         }
         if (!hasEqualsObject && !hasEqualsSelf && !usesDefaultEquals && !obj.isAbstract() && hasFields && inheritedEquals != null
                 && !inheritedEqualsIsFinal && !inheritedEqualsFromAbstractClass

@@ -13,29 +13,29 @@ import edu.umd.cs.findbugs.util.ClassName;
 /**
  * @author kaituo
  */
-public class DECodeGenerator implements PERMCG {
+public class DEPERMCG implements PERMCG {
     public String d2RFile, d2RDir;
     //public static String filePublic;
-    private static DECodeGenerator instance = null;
+    private static DEPERMCG instance = null;
     private int pj;
 
-    protected DECodeGenerator() {
+    protected DEPERMCG() {
         super();
         /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");
         d2RDir = userConfigValues.getProperty("de.codegen.folder");
         d2RFile = userConfigValues.getProperty("de.runtime.record");*/
         //filePublic = "./DyFile/DE/DE2.aj";
-        d2RDir = Config.getInstance().getProperty("de.codegen.folder");
-        d2RFile = Config.getInstance().getProperty("de.runtime.record");
+        d2RDir = Config.getInstance().getStringProperty("de.codegen.folder");
+        d2RFile = Config.getInstance().getStringProperty("de.runtime.record");
         RFBIUtil.createFolder(d2RDir);
         RFBIUtil.createFile(d2RFile);
         //create(filePublic);
         pj = 1;
     }
 
-    public static DECodeGenerator getInstance() {
+    public static DEPERMCG getInstance() {
         if(instance == null) {
-            instance = new DECodeGenerator();
+            instance = new DEPERMCG();
         }
         return instance;
     }
@@ -147,6 +147,9 @@ public class DECodeGenerator implements PERMCG {
     //    }
 
     public void generateAspectJ(XMethod called, String causeName, String bugLoc) {
+        assert(Config.getInstance().getBooleanProperty("perm.enabled"));
+        assert(Config.getInstance().getBooleanProperty("de.perm.phase"));
+
         String[] throwns = called.getThrownExceptions();
 
         if(throwns==null || throwns.length==0) {

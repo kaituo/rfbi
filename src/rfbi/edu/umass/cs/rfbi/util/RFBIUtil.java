@@ -154,5 +154,4 @@ public class RFBIUtil {
             out.close();
         }
     }
-
 }

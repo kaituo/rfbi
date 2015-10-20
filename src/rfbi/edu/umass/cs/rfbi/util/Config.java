@@ -40,8 +40,16 @@ public class Config {
         return instance;
     }
 
-    public String getProperty(String key) {
+    private String getProperty(String key) {
         return userConfigValues.getProperty(key);
+    }
+
+    public String getStringProperty(String key) {
+        return getProperty(key);
+    }
+
+    public boolean getBooleanProperty(String key) {
+        return Boolean.parseBoolean(getProperty(key));
     }
 
     private Properties loadAndApplyProperties(final String fileName)
