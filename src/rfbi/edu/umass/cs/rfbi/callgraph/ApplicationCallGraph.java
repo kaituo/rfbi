@@ -113,7 +113,8 @@ public class ApplicationCallGraph {
     }
 
     /**
-     * Check if caller belongs to an application class and caller has at least one argument (not this); if no, go upwards in the call graph and find its caller on the application side
+     * Check if 1) caller belongs to an application class; 2) caller has at least one argument (not this);
+     * 3) caller does not belong to an inner class. If no, go upwards in the call graph and find its caller on the application side
      * This is actually an DFS.  Compared with getCallers, this method should be used more often.
      * @param caller: dotted class name, to be checked
      * @return null if no application side caller
@@ -130,7 +131,8 @@ public class ApplicationCallGraph {
         if(type==null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if(numParams<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)) {
+        if(numParams<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
+                || type.contains("$")) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
             assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.
