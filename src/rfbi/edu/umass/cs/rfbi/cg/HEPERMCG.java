@@ -14,7 +14,7 @@ import edu.umass.cs.rfbi.util.RFBIUtil;
  * @author kaituo
  */
 public class HEPERMCG implements PERMCG {
-    public String h2RDir, h2RFile;
+    public String h2RDir, runtimeFile, allRecordFile;
     //public static String filePublic;
     private static HEPERMCG instance = null;
     private int pj;
@@ -25,8 +25,10 @@ public class HEPERMCG implements PERMCG {
         h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
         //h2RFile = Config.getInstance().getStringProperty("he.runtime.record");
         RFBIUtil.createFolder(h2RDir);
-        h2RFile = h2RDir+"/he.txt";
-        RFBIUtil.createFile(h2RFile);
+        runtimeFile = h2RDir+"/runtime.txt";
+        RFBIUtil.createFile(runtimeFile);
+        allRecordFile = h2RDir+"/allRecords.txt";
+        RFBIUtil.createFile(allRecordFile);
 
         pj = 1;
     }
@@ -93,7 +95,7 @@ public class HEPERMCG implements PERMCG {
         sb.append("\t\tRFile.writeDE2(\"");
         sb.append(dottedClassName);
         sb.append("\", \"");
-        sb.append(h2RFile);
+        sb.append(runtimeFile);
         sb.append("\");\n");
         sb.append("\t\treturn super.hashCode();\n");
         sb.append("\t}\n");
@@ -122,9 +124,12 @@ public class HEPERMCG implements PERMCG {
 
         try {
             RFBIUtil.write(publicPointCut.toString(), fileName);
-        } catch (IOException e1) {
+            // make a record all the blacklist classes
+            RFBIUtil.write(dottedClassName, allRecordFile);
+        } catch (IOException e) {
             // TODO Auto-generated catch block
-            e1.printStackTrace();
+            e.printStackTrace();
         }
+
     }
 }
