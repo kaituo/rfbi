@@ -26,7 +26,7 @@ public class DEPERMCG implements PERMCG {
         d2RFile = userConfigValues.getProperty("de.runtime.record");*/
         //filePublic = "./DyFile/DE/DE2.aj";
         d2RDir = Config.getInstance().getStringProperty("de.codegen.folder");
-        d2RFile = Config.getInstance().getStringProperty("de.runtime.record");
+        d2RFile = d2RDir + "/dde2.txt"; //Config.getInstance().getStringProperty("de.runtime.record");
         RFBIUtil.createFolder(d2RDir);
         RFBIUtil.createFile(d2RFile);
         //create(filePublic);
