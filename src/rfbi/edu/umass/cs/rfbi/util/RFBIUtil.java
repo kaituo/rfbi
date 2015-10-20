@@ -117,7 +117,7 @@ public class RFBIUtil {
             f.createNewFile();
             return f;
         }catch(Exception e){
-            AnalysisContext.logError("Cannot create a file.");
+            AnalysisContext.logError("Cannot create file " + file);
             assert false;
         }
         return null;

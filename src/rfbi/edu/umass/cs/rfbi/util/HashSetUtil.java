@@ -1,5 +1,6 @@
 package edu.umass.cs.rfbi.util;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -7,23 +8,23 @@ import java.util.Set;
  * @author Kaituo
  */
 public class HashSetUtil {
+    /**
+     * Returns the difference of two sets. The returned set contains all elements that are contained by {@code set1} and
+     * not contained by {@code set2}.
+     * @param set1
+     * @param set2
+     * @return
+     */
+    public Set<String> difference(Set<String> set1, Set<String> set2) {
+        Set<String> res = new HashSet<>();
 
-    public Set<String> difference(Set<String> ha, Set<String> hb) {
-        Iterator<String> ita = ha.iterator();
-        Iterator<String> itb;
-
-        while (ita.hasNext()) {
-            String val = ita.next();
-            itb = hb.iterator();
-            while (itb.hasNext()) {
-                if (val.equals(itb.next())) {
-                    ita.remove();
-                    break;
-                }
+        for(String a: set1) {
+            if(!set2.contains(a)) {
+                res.add(a);
             }
-
         }
-        return ha;
+
+        return res;
     }
 
     public void printAndGetSize(Set<String> union) {

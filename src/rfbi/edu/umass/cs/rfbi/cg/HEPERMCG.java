@@ -14,7 +14,7 @@ import edu.umass.cs.rfbi.util.RFBIUtil;
  * @author kaituo
  */
 public class HEPERMCG implements PERMCG {
-    public String h2RFile, h2RDir;
+    public String h2RDir, h2RFile;
     //public static String filePublic;
     private static HEPERMCG instance = null;
     private int pj;
@@ -23,8 +23,9 @@ public class HEPERMCG implements PERMCG {
         super();
         /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");*/
         h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
-        h2RFile = Config.getInstance().getStringProperty("he.runtime.record");
+        //h2RFile = Config.getInstance().getStringProperty("he.runtime.record");
         RFBIUtil.createFolder(h2RDir);
+        h2RFile = h2RDir+"/he.txt";
         RFBIUtil.createFile(h2RFile);
 
         pj = 1;
@@ -89,9 +90,9 @@ public class HEPERMCG implements PERMCG {
         sb.append("\tpublic int ");
         sb.append(dottedClassName);
         sb.append(".hashCode() {\n");
-        sb.append("\t\tRFile.writeDE2(\"the hashCode method of ");
+        sb.append("\t\tRFile.writeDE2(\"");
         sb.append(dottedClassName);
-        sb.append(" is called\", \"");
+        sb.append("\", \"");
         sb.append(h2RFile);
         sb.append("\");\n");
         sb.append("\t\treturn super.hashCode();\n");

@@ -113,7 +113,7 @@ public class ApplicationCallGraph {
     }
 
     /**
-     * Check if caller is an application class; if no, go upwards in the call graph and find its caller on the application side
+     * Check if caller belongs to an application class and caller has at least one argument (not this); if no, go upwards in the call graph and find its caller on the application side
      * This is actually an DFS.  Compared with getCallers, this method should be used more often.
      * @param caller: dotted class name, to be checked
      * @return null if no application side caller
