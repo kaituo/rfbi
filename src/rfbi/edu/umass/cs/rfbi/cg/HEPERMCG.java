@@ -1,9 +1,7 @@
 package edu.umass.cs.rfbi.cg;
 
-import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -39,20 +37,20 @@ public class HEPERMCG implements PERMCG {
         return instance;
     }
 
-    public static void writeDE(String destr, String fileName) {
-        FileWriter fstream;
-
-        try {
-            fstream = new FileWriter(fileName,true);
-            BufferedWriter out = new BufferedWriter(fstream);
-            out.write(destr);
-            out.newLine();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
+    //    public static void writeDE(String destr, String fileName) {
+    //        FileWriter fstream;
+    //
+    //        try {
+    //            fstream = new FileWriter(fileName,true);
+    //            BufferedWriter out = new BufferedWriter(fstream);
+    //            out.write(destr);
+    //            out.newLine();
+    //            out.close();
+    //        } catch (IOException e) {
+    //            e.printStackTrace();
+    //        }
+    //
+    //    }
 
     public Set<String> readRFile(String fileName) throws FileNotFoundException {
         Set<String> delete = new HashSet<String>();
@@ -108,15 +106,15 @@ public class HEPERMCG implements PERMCG {
 
         // method info
         StringBuffer publicPointCut = new StringBuffer();
-        publicPointCut.append(generatePERMPart1(pj++, "edu.umass.cs.rfbi.he"));
+        publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
         publicPointCut.append(generatePERMPart2(dottedClassName));
 
-        publicPointCut.append("}");
+        //publicPointCut.append("}");
 
         StringBuffer filetoWrite = new StringBuffer();
         filetoWrite.append(h2RDir);
         filetoWrite.append("/HE");
-        filetoWrite.append(pj);
+        filetoWrite.append(pj++);
         filetoWrite.append(".aj");
         String fileName = filetoWrite.toString();
         RFBIUtil.createFile(fileName);
