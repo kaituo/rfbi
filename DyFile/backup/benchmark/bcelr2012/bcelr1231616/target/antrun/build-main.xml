@@ -1,0 +1,11 @@
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+ <copy todir="/home/kaituo/code/benchmarks/bcel/bcelr2012/bcelr1231616/target/apidocs/META-INF">
+  <fileset dir="/home/kaituo/code/benchmarks/bcel/bcelr2012/bcelr1231616">
+   <include name="LICENSE.txt"/>
+   <include name="NOTICE.txt"/>
+  </fileset>
+ </copy>
+</target>
+
+</project>
