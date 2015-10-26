@@ -19,8 +19,10 @@
 
 package edu.umass.cs.rfbi.util;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -34,6 +36,7 @@ import edu.umd.cs.findbugs.ba.AnalysisContext;
  */
 public class RFBIUtil {
     private static String tempdir = null;
+
     /**
      * return system tmp directory
      *
@@ -54,12 +57,13 @@ public class RFBIUtil {
 
     /**
      *
-     * @param fmeth className.methodName
+     * @param fmeth
+     *            className.methodName
      * @return [className, methodName]
      */
     public static String[] splitFullMethodName(String fmeth) {
         int lastOccur = fmeth.lastIndexOf(".");
-        return new String[] {fmeth.substring(0, lastOccur), fmeth.substring(lastOccur+1)};
+        return new String[] { fmeth.substring(0, lastOccur), fmeth.substring(lastOccur + 1) };
 
     }
 
@@ -67,7 +71,7 @@ public class RFBIUtil {
         File f = null;
         boolean bool = false;
 
-        try{
+        try {
             // create new folders
             f = new File(dir);
 
@@ -75,17 +79,16 @@ public class RFBIUtil {
             bool = f.exists();
 
             // prints
-            //System.out.println("File exists: "+bool);
+            // System.out.println("File exists: "+bool);
 
-            if(bool == true)
-            {
+            if (bool == true) {
                 // delete() invoked
                 FileUtils.deleteDirectory(f);
             }
             // create new file in the system
             f.mkdirs();
             return f;
-        }catch(Exception e){
+        } catch (Exception e) {
             AnalysisContext.logError("Cannot create folders.");
             assert false;
         }
@@ -96,43 +99,40 @@ public class RFBIUtil {
         File f = null;
         boolean bool = false;
 
-        try{
+        try {
             // create new files
             f = new File(file);
-
-
 
             // tests if file exists
             bool = f.exists();
 
             // prints
-            //System.out.println("File exists: "+bool);
+            // System.out.println("File exists: "+bool);
 
-            if(bool == true)
-            {
+            if (bool == true) {
                 // delete() invoked
                 f.delete();
             }
             // create new file in the system
             f.createNewFile();
             return f;
-        }catch(Exception e){
+        } catch (Exception e) {
             AnalysisContext.logError("Cannot create file " + file);
             assert false;
         }
         return null;
     }
 
-    //    public void dyCheck(BugInstance bi) { }
+    // public void dyCheck(BugInstance bi) { }
     //
-    //    public void dyCheck(String bi, String foul, String pN) { }
+    // public void dyCheck(String bi, String foul, String pN) { }
     //
-    //    public void dyCheck(BugInstance bi, String foul, String pN) { }
+    // public void dyCheck(BugInstance bi, String foul, String pN) { }
 
     public String getPackageName(String foul, boolean slash) {
-        if(slash) {
+        if (slash) {
             int lastOne = foul.lastIndexOf("/");
-            return foul.substring(0, lastOne+1);
+            return foul.substring(0, lastOne + 1);
         } else {
             int lastOne = foul.lastIndexOf(".");
             return foul.substring(0, lastOne);
@@ -142,16 +142,38 @@ public class RFBIUtil {
 
     public String getPackageNameSlash(String foul) {
         int lastOne = foul.lastIndexOf("/");
-        return foul.substring(0, lastOne+1);
+        return foul.substring(0, lastOne + 1);
     }
 
     /** Write fixed content to the given file. */
-    public static void write(String code, String ajFileName) throws IOException  {
+    public static void write(String code, String ajFileName) throws IOException {
         Writer out = new OutputStreamWriter(new FileOutputStream(ajFileName));
         try {
             out.write(code);
         } finally {
             out.close();
         }
+    }
+
+    public static void append(String content, String fileName) {
+        BufferedWriter bw = null;
+
+        try {
+            // APPEND MODE SET HERE
+            bw = new BufferedWriter(new FileWriter(fileName, true));
+            bw.write(content);
+            bw.newLine();
+            bw.flush();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally { // always close the file
+            if (bw != null) {
+                try {
+                    bw.close();
+                } catch (IOException ioe2) {
+                    // just ignore it
+                }
+            }
+        } // end try/catch/finally
     }
 }

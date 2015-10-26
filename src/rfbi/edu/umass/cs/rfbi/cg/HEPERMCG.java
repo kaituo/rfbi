@@ -124,8 +124,8 @@ public class HEPERMCG implements PERMCG {
 
         try {
             RFBIUtil.write(publicPointCut.toString(), fileName);
-            // make a record all the blacklist classes
-            RFBIUtil.write(dottedClassName, allRecordFile);
+            // make a record of all the blacklist classes
+            RFBIUtil.append(dottedClassName, allRecordFile);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
