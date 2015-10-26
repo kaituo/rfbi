@@ -2,11 +2,13 @@ package edu.umass.cs.rfbi.cg;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.umass.cs.rfbi.callgraph.ApplicationCallGraph;
 import edu.umass.cs.rfbi.util.Config;
 import edu.umass.cs.rfbi.util.RFBIUtil;
+import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 
@@ -15,12 +17,15 @@ import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
  */
 public class SwitchAspectsGenerator {
     private int HEPj;
-    private final String HEDir;
-    //    public RFile rf;
-    //
+    private final String HESwitchDir, HEPERMDir;
+
+    public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.SwitchAspectsGenerator.debug");
+
     public SwitchAspectsGenerator() {
         HEPj = 0;
-        HEDir = Config.getInstance().getStringProperty("he.codegen.switch");
+        HESwitchDir = Config.getInstance().getStringProperty("he.codegen.switch");
+        HEPERMDir = Config.getInstance().getStringProperty("he.codegen.perm");
+        RFBIUtil.createFolder(HESwitchDir);
     }
 
     //    public void dyCheck(BugInstance bi) { }
@@ -67,36 +72,34 @@ public class SwitchAspectsGenerator {
         RFBIUtil.write(sb.toString(), fileName);
     }
 
-    /**
-     * TODO
-     * @param f
-     * @return
-     */
-    private String[][] analyze(File f) {
-        return null;
-    }
 
     public void generateAllSwitchAspects() {
         assert Config.getInstance().getBooleanProperty("switch.enabled");
         if(Config.getInstance().getBooleanProperty("he.switch.phase")) {
             // Incomplete analyze
-            //String[][] HEPerms = analyze(null);
-            //generateSwitchAspects(HEPerms, "edu.umass.cs.rfbi.he", "HE");
-            ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
+            Set<String> allRecords = RFBIUtil.readFile2Set(new File(HEPERMDir+"/allRecords.txt"));
+            Set<String> permRecords = RFBIUtil.readFile2Set(new File(HEPERMDir+"/runtime.txt"));
+            Set<String> leftOverPerms = RFBIUtil.difference(allRecords, permRecords);
+            generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
+            //ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
         }
     }
 
-    /**
-     *
-     * @param perms: perm[i][0]: class name; perm[i][1]: method name; perm[i][2]: method signature; perm[i][4]: static or not
-     * e.g. perm[i][0]: "java/lang/Object"; perm[i][1]: "hashCode"; perm[i][2]: "()I"; perm[i][3]: false
-     */
-    private void generateSwitchAspects(String[][] perms, String packageName, String filePrefix) {
-        for(int i=0; i<perms.length; i++) {
-            Set<InterproceduralCallGraphVertex> callers =
-                    ApplicationCallGraph.getInstance().getCallers(perms[i][0], perms[i][1], perms[i][2], Boolean.valueOf(perms[i][3]));
-            generateSwitchAspectJ(callers, packageName, filePrefix);
+
+    private void generateHESwitch(Set<String> leftOverPerms, String packageName, String filePrefix) {
+        Set<InterproceduralCallGraphVertex> allCallers = new HashSet<>();
+        for(String perm: leftOverPerms) {
+            Set<InterproceduralCallGraphVertex> callers = ApplicationCallGraph.getInstance().getCallers(perm, "hashCode", "()I", false);
+            allCallers.addAll(callers);
+
+            if(DEBUG) {
+                System.out.println(callers.size() + " callers are to be genearated.");
+            }
         }
+        if(DEBUG) {
+            System.out.println(allCallers.size() + " callers altogether");
+        }
+        generateSwitchAspectJ(allCallers, packageName, filePrefix);
     }
 
     /**
@@ -110,7 +113,7 @@ public class SwitchAspectsGenerator {
             try {
                 XMethod xmethod = caller.getXmethod();
                 //String[] names = RFBIUtil.splitFullMethodName(caller.getXmethod().toString());
-                generateSwitchPhase(xmethod.getClassName(), xmethod.getName(), packageName, filePrefix, HEPj++, HEDir);
+                generateSwitchPhase(xmethod.getClassName(), xmethod.getName(), packageName, filePrefix, HEPj++, HESwitchDir);
             } catch (IOException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();

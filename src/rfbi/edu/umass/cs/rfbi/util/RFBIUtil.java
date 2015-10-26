@@ -19,13 +19,19 @@
 
 package edu.umass.cs.rfbi.util;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 
@@ -176,4 +182,73 @@ public class RFBIUtil {
             }
         } // end try/catch/finally
     }
+
+    /**
+     * Returns the difference of two sets. The returned set contains all elements that are contained by {@code set1} and
+     * not contained by {@code set2}.
+     * @param set1
+     * @param set2
+     * @return
+     */
+    public static Set<String> difference(Set<String> set1, Set<String> set2) {
+        Set<String> res = new HashSet<>();
+
+        for(String a: set1) {
+            if(!set2.contains(a)) {
+                res.add(a);
+            }
+        }
+
+        return res;
+    }
+
+    public static void printAndGetSize(Set<String> union) {
+        Iterator<String> iterator = union.iterator();
+        while (iterator.hasNext()) {
+            System.out.println(iterator.next());
+        }
+        System.out.println();
+        // Get size of a collection
+        int size = union.size();
+        if (union.isEmpty()) {
+            System.out.println("empty");
+        } else {
+            System.out.println("size: " + size);
+        }
+        System.out.println();
+    }
+
+    /**
+     * Read file contents line-by-line into a set
+     * @param fin
+     * @return
+     * @throws IOException
+     */
+    public static Set<String> readFile2Set(File fin)  {
+
+        Set<String> res = new HashSet<>();
+        //Construct BufferedReader from InputStreamReader
+        BufferedReader br = null;
+
+        String line = null;
+        try {
+            FileInputStream fis = new FileInputStream(fin);
+            br = new BufferedReader(new InputStreamReader(fis));
+            while ((line = br.readLine()) != null) {
+                res.add(line);
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+
+        return res;
+    }
+
 }

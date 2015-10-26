@@ -87,13 +87,13 @@ public class HEPERMCG implements PERMCG {
         return sb.toString();
     }
 
-    public String generatePERMPart2(String dottedClassName) {
+    public String generatePERMPart2(String dottedClassName, String slashedClassName) {
         StringBuffer sb = new StringBuffer();
         sb.append("\tpublic int ");
         sb.append(dottedClassName);
         sb.append(".hashCode() {\n");
         sb.append("\t\tRFile.writeDE2(\"");
-        sb.append(dottedClassName);
+        sb.append(slashedClassName);
         sb.append("\", \"");
         sb.append(runtimeFile);
         sb.append("\");\n");
@@ -103,14 +103,14 @@ public class HEPERMCG implements PERMCG {
         return sb.toString();
     }
 
-    public void generatePERMAspectJ(String dottedClassName) {
+    public void generatePERMAspectJ(String dottedClassName, String slashedClassName) {
         assert(Config.getInstance().getBooleanProperty("perm.enabled"));
         assert(Config.getInstance().getBooleanProperty("he.perm.phase"));
 
         // method info
         StringBuffer publicPointCut = new StringBuffer();
         publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
-        publicPointCut.append(generatePERMPart2(dottedClassName));
+        publicPointCut.append(generatePERMPart2(dottedClassName, slashedClassName));
 
         //publicPointCut.append("}");
 
@@ -125,7 +125,7 @@ public class HEPERMCG implements PERMCG {
         try {
             RFBIUtil.write(publicPointCut.toString(), fileName);
             // make a record of all the blacklist classes
-            RFBIUtil.append(dottedClassName, allRecordFile);
+            RFBIUtil.append(slashedClassName, allRecordFile);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

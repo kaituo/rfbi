@@ -50,6 +50,7 @@ public class ApplicationCallGraph {
     //        }
     //    }
 
+    // put -Drfbi.callgraph.debug=true as VM arguments, you can print out debug info
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.callgraph.debug");
 
     private static volatile ApplicationCallGraph instance = null;
@@ -104,9 +105,9 @@ public class ApplicationCallGraph {
 
         if(DEBUG) {
             System.out.println("The size of the caller: " + count);
-            for(InterproceduralCallGraphVertex v: res) {
+            /*for(InterproceduralCallGraphVertex v: res) {
                 System.out.println(v.getXmethod().toString());
-            }
+            }*/
         }
 
         return res;
@@ -126,13 +127,12 @@ public class ApplicationCallGraph {
         //        }
         XMethod callerMeth = caller.getXmethod();
         String type = callerMeth.getClassName();
-        int numParams = callerMeth.getNumParams();
 
         if(type==null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if(numParams<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
-                || type.contains("$")) {
+        if(callerMeth.getNumParams()<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
+                || type.contains("$") || callerMeth.getName().contains("$")) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
             assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.

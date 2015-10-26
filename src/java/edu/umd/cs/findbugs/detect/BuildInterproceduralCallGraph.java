@@ -28,6 +28,7 @@ import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.NonReportingDetector;
+import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ClassContext;
 import edu.umd.cs.findbugs.ba.XFactory;
@@ -58,6 +59,7 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
 
     int count = 0;
 
+    public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.BuildInterproceduralCallGraph.debug");
     /**
      * Constructor.
      *
@@ -114,8 +116,6 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
         foreach t in T.getSubTypes():
             t.getMethod(m2).addPossibleCaller(m)
 
-     * @param called
-     * @param isStatic
      * @author Kaituo
      */
     private void addEdges4Subtypes(MethodDescriptor called, int seen) {
@@ -176,7 +176,9 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
         }
         Global.getAnalysisCache().eagerlyPutDatabase(InterproceduralCallGraph.class, callGraph);
         if(Config.getInstance().getBooleanProperty("switch.enabled")) {
-            System.out.println("BuildInterprocedural's sawOpCode has been called " + count);
+            if(DEBUG) {
+                System.out.println("BuildInterprocedural's sawOpCode has been called " + count);
+            }
             SwitchAspectsGenerator scg = new SwitchAspectsGenerator();
             scg.generateAllSwitchAspects();
             //TraceWriter.writeState(callGraph);
