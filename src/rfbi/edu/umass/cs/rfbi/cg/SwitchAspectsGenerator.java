@@ -17,7 +17,7 @@ import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
  */
 public class SwitchAspectsGenerator {
     private int HEPj;
-    private final String HESwitchDir, HEPERMDir;
+    private final String HESwitchDir, HEPERMDir, HEStateDir, allRecordFile;
 
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.SwitchAspectsGenerator.debug");
 
@@ -25,7 +25,10 @@ public class SwitchAspectsGenerator {
         HEPj = 0;
         HESwitchDir = Config.getInstance().getStringProperty("he.codegen.switch");
         HEPERMDir = Config.getInstance().getStringProperty("he.codegen.perm");
+        HEStateDir = Config.getInstance().getStringProperty("he.save.state");
+        allRecordFile = HESwitchDir+"/allRecords.txt";
         RFBIUtil.createFolder(HESwitchDir);
+        RFBIUtil.createFile(allRecordFile);
     }
 
     //    public void dyCheck(BugInstance bi) { }
@@ -51,12 +54,14 @@ public class SwitchAspectsGenerator {
 
         sb.append("\tbefore(");
         sb.append(className);
-        sb.append(" instance): call(* ");
+        sb.append(" instance): call(* * ");
         sb.append(className);
         sb.append("+.");
         sb.append(methodName);
-        sb.append("(..)) && this(instance); {");
-        sb.append("\n\t\tTraceWriter.writeState(instance);");
+        sb.append("(..)) && this(instance) {");
+        sb.append("\n\t\tTraceWriter.writeState(instance, ");
+        sb.append(HEStateDir);
+        sb.append(");");
         sb.append("\n\t}");
         sb.append("\n}");
 
@@ -70,6 +75,8 @@ public class SwitchAspectsGenerator {
         RFBIUtil.createFile(fileName);
 
         RFBIUtil.write(sb.toString(), fileName);
+        // make a record of all the blacklist classes
+        RFBIUtil.append(className+"."+methodName, allRecordFile);
     }
 
 

@@ -41,14 +41,14 @@ import edu.umd.cs.findbugs.ba.AnalysisContext;
  * @author kaituo
  */
 public class RFBIUtil {
-    private static String tempdir = null;
-
     /**
      * return system tmp directory
      *
      * @return
      */
     public static String getTmpDirectory() {
+        String tempdir = null;
+
         if (tempdir != null) {
             return tempdir;
         }

@@ -113,6 +113,17 @@ public class ApplicationCallGraph {
         return res;
     }
 
+    boolean isUndesiredMethName(String methName) {
+        // <init> method can have arguments too.  THey are usually associated with invokespecial
+        // or "new constructor" call.  The receiver here is not fully constructed so not very
+        // useful for us. So we continue to search upwards in the call graph. Similarly for <clinit>
+        if(methName.contains("$") || methName.contains("<init>") || methName.contains("<clinit>")) {
+            return true;
+        }
+
+        return false;
+    }
+
     /**
      * Check if 1) caller belongs to an application class; 2) caller has at least one argument (not this);
      * 3) caller does not belong to an inner class and is not aspect generated method (these are covered by checking
@@ -133,7 +144,7 @@ public class ApplicationCallGraph {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
         if(callerMeth.getNumParams()<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
-                || type.contains("$") || callerMeth.getName().contains("$")) {
+                || type.contains("$") || isUndesiredMethName(callerMeth.getName())) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
             assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.

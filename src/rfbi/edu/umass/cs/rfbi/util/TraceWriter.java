@@ -29,14 +29,35 @@ import java.util.zip.GZIPOutputStream;
  * @author kaituo
  */
 public class TraceWriter {
-    public static File writeState(Object receiver) {
+    /**
+     * return system tmp directory
+     *
+     * @return
+     */
+    private static String getTmpDirectory() {
+        String tempdir = null;
+
+        if (tempdir != null) {
+            return tempdir;
+        }
+
+        tempdir = System.getProperty("java.io.tmpdir");
+        if (!(tempdir.endsWith("/") || tempdir.endsWith("\\"))) {
+            tempdir = tempdir + System.getProperty("file.separator");
+        }
+
+        return tempdir;
+    }
+
+    public static File writeState(Object receiver, String dir) {
         File traceFile = null;
         OutputStreamWriter fw;
         try {
             // a new file rfbia.b.c$xxx.trace.gz will be created
             // a.b.c is the class name
-            traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(
-                    RFBIUtil.getTmpDirectory()));
+            //traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(
+            //       getTmpDirectory()));
+            traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(dir));
             assert (traceFile != null);
 
             fw = new OutputStreamWriter(new GZIPOutputStream(
