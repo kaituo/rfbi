@@ -19,11 +19,16 @@ public class HEPERMCG implements PERMCG {
     private static HEPERMCG instance = null;
     private int pj;
 
-    protected HEPERMCG() {
-        super();
-        /*Properties userConfigValues = loadAndApplyProperties("rfbi.mf");*/
-        h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
-        //h2RFile = Config.getInstance().getStringProperty("he.runtime.record");
+    /**
+     * When generating aspects for unconfirmed bugs, I don't need to recreate
+     * @param recreate: Whether I want to recreate the file folder or not
+     */
+    protected HEPERMCG(boolean leftOverPerm) {
+        if(leftOverPerm) {
+            h2RDir = Config.getInstance().getStringProperty("he.codegen.leftperm");
+        } else {
+            h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
+        }
         RFBIUtil.createFolder(h2RDir);
         runtimeFile = h2RDir+"/runtime.txt";
         RFBIUtil.createFile(runtimeFile);
@@ -33,9 +38,9 @@ public class HEPERMCG implements PERMCG {
         pj = 1;
     }
 
-    public static HEPERMCG getInstance() {
+    public static HEPERMCG getInstance(boolean leftOverPerm) {
         if(instance == null) {
-            instance = new HEPERMCG();
+            instance = new HEPERMCG(leftOverPerm);
         }
         return instance;
     }
@@ -104,16 +109,10 @@ public class HEPERMCG implements PERMCG {
     }
 
     public void generatePERMAspectJ(String dottedClassName, String slashedClassName) {
-        assert(Config.getInstance().getBooleanProperty("perm.enabled"));
-        assert(Config.getInstance().getBooleanProperty("he.perm.phase"));
-
         // method info
         StringBuffer publicPointCut = new StringBuffer();
         publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
         publicPointCut.append(generatePERMPart2(dottedClassName, slashedClassName));
-
-        //publicPointCut.append("}");
-
         StringBuffer filetoWrite = new StringBuffer();
         filetoWrite.append(h2RDir);
         filetoWrite.append("/HE");
@@ -124,8 +123,10 @@ public class HEPERMCG implements PERMCG {
 
         try {
             RFBIUtil.write(publicPointCut.toString(), fileName);
+
             // make a record of all the blacklist classes
             RFBIUtil.append(slashedClassName, allRecordFile);
+
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

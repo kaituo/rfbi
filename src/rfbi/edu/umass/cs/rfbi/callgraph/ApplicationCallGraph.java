@@ -115,7 +115,8 @@ public class ApplicationCallGraph {
 
     /**
      * Check if 1) caller belongs to an application class; 2) caller has at least one argument (not this);
-     * 3) caller does not belong to an inner class. If no, go upwards in the call graph and find its caller on the application side
+     * 3) caller does not belong to an inner class and is not aspect generated method (these are covered by checking
+     * if the class name or method name contains $. If no, go upwards in the call graph and find its caller on the application side
      * This is actually an DFS.  Compared with getCallers, this method should be used more often.
      * @param caller: dotted class name, to be checked
      * @return null if no application side caller

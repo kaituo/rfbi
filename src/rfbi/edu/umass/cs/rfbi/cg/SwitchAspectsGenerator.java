@@ -81,6 +81,9 @@ public class SwitchAspectsGenerator {
             Set<String> permRecords = RFBIUtil.readFile2Set(new File(HEPERMDir+"/runtime.txt"));
             Set<String> leftOverPerms = RFBIUtil.difference(allRecords, permRecords);
             generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
+            for(String slashedClassName: leftOverPerms) {
+                HEPERMCG.getInstance(true).generatePERMAspectJ(slashedClassName.replace('/', '.'), slashedClassName);
+            }
             //ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
         }
     }
