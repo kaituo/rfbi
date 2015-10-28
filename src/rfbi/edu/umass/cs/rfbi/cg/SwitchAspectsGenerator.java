@@ -28,6 +28,7 @@ public class SwitchAspectsGenerator {
         HEStateDir = Config.getInstance().getStringProperty("he.save.state");
         allRecordFile = HESwitchDir+"/allRecords.txt";
         RFBIUtil.createFolder(HESwitchDir);
+        RFBIUtil.createFolder(HEStateDir);
         RFBIUtil.createFile(allRecordFile);
     }
 
@@ -54,14 +55,14 @@ public class SwitchAspectsGenerator {
 
         sb.append("\tbefore(");
         sb.append(className);
-        sb.append(" instance): call(* * ");
+        sb.append(" instance): call(* ");
         sb.append(className);
         sb.append("+.");
         sb.append(methodName);
         sb.append("(..)) && this(instance) {");
-        sb.append("\n\t\tTraceWriter.writeState(instance, ");
+        sb.append("\n\t\tTraceWriter.writeState(instance, \"");
         sb.append(HEStateDir);
-        sb.append(");");
+        sb.append("\");");
         sb.append("\n\t}");
         sb.append("\n}");
 

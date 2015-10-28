@@ -29,26 +29,6 @@ import java.util.zip.GZIPOutputStream;
  * @author kaituo
  */
 public class TraceWriter {
-    /**
-     * return system tmp directory
-     *
-     * @return
-     */
-    private static String getTmpDirectory() {
-        String tempdir = null;
-
-        if (tempdir != null) {
-            return tempdir;
-        }
-
-        tempdir = System.getProperty("java.io.tmpdir");
-        if (!(tempdir.endsWith("/") || tempdir.endsWith("\\"))) {
-            tempdir = tempdir + System.getProperty("file.separator");
-        }
-
-        return tempdir;
-    }
-
     public static File writeState(Object receiver, String dir) {
         File traceFile = null;
         OutputStreamWriter fw;
