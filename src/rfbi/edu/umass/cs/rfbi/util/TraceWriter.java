@@ -29,7 +29,7 @@ import java.util.zip.GZIPOutputStream;
  * @author kaituo
  */
 public class TraceWriter {
-    public static File writeState(Object receiver, String dir) {
+    public static File writeState(Object receiver, String name, String dir) {
         File traceFile = null;
         OutputStreamWriter fw;
         try {
@@ -37,7 +37,7 @@ public class TraceWriter {
             // a.b.c is the class name
             //traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(
             //       getTmpDirectory()));
-            traceFile = File.createTempFile("rfbi"+receiver.getClass().getName()+"$", ".trace.gz", new File(dir));
+            traceFile = File.createTempFile(name+"$", ".trace.gz", new File(dir));
             assert (traceFile != null);
 
             fw = new OutputStreamWriter(new GZIPOutputStream(

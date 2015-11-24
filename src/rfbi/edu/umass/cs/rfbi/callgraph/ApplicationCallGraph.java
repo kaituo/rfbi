@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import edu.umass.cs.rfbi.util.LinkedStringList;
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.XMethod;
@@ -37,54 +38,64 @@ import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
  * @author kaituo
  */
 public class ApplicationCallGraph {
+    public LinkedStringList DO_NOT_COUNT_PREFIXES =
+            new LinkedStringList(
+                    "edu.umass.cs."
+                    );
 
-    //    static class CallGraphDepth {
-    //        int distance;
-    //        private CallGraphDepth() {
-    //            distance = 0;
-    //        }
-    //
-    //        CallGraphDepth incrementDepth() {
-    //            distance++;
-    //            return this;
-    //        }
-    //    }
+    public boolean isIgnored(String type) {
+        String typeName = type.replace("/", "."); //$NON-NLS-1$ //$NON-NLS-2$
 
-    // put -Drfbi.callgraph.debug=true as VM arguments, you can print out debug info
+        for (String prefix : DO_NOT_COUNT_PREFIXES) {
+            if (typeName.startsWith(prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // put -Drfbi.callgraph.debug=true as VM arguments, you can print out debug
+    // info
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.callgraph.debug");
 
     private static volatile ApplicationCallGraph instance = null;
-    //private final int defaultSearchDepth = 20;
+
+    // private final int defaultSearchDepth = 20;
 
     /**
      * ToDo: add other patterns into the map if needed
      */
-    private ApplicationCallGraph() {}
+    private ApplicationCallGraph() {
+    }
 
     public static synchronized ApplicationCallGraph getInstance() {
-        if(instance==null) {
+        if (instance == null) {
             instance = new ApplicationCallGraph();
         }
         return instance;
     }
 
     /**
-     * Get callers of a method; these callers are all application class. The difference between getCallers
-     * and getApplicationCallers is that the former is a list of direct callers we want to collect while the latter
-     * is sth we want to explore further if one of the direct callers is not an application class.
+     * Get callers of a method; these callers are all application class. The
+     * difference between getCallers and getApplicationCallers is that the
+     * former is a list of direct callers we want to collect while the latter is
+     * sth we want to explore further if one of the direct callers is not an
+     * application class.
      *
      * @param className
-     * @param name: method name
-     * @param signature: method signature
+     * @param name
+     *            : method name
+     * @param signature
+     *            : method signature
      * @param isStatic
      * @return
      */
-    public Set<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String
-            className, String name, String signature, boolean isStatic) {
+    public Set<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String className, String name, String signature,
+            boolean isStatic) {
         InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
         InterproceduralCallGraphVertex vertex;
-        MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(className, name,
-                signature, isStatic);
+        MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(className, name, signature, isStatic);
 
         vertex = callGraph.lookupVertex(called);
         if (vertex == null) {
@@ -94,8 +105,12 @@ public class ApplicationCallGraph {
         Set<InterproceduralCallGraphVertex> res = new HashSet<>();
         HashSet<InterproceduralCallGraphVertex> cache = new HashSet<>();
         int count = 0;
-        while(itor.hasNext()) {
+
+        while (itor.hasNext()) {
             InterproceduralCallGraphVertex caller = itor.next();
+            if (DEBUG) {
+                System.out.print("\n" + caller.getXmethod().toString());
+            }
             Set<InterproceduralCallGraphVertex> iterRes = new HashSet<>();
 
             getApplicationCallers(caller, callGraph, iterRes, cache);
@@ -103,21 +118,25 @@ public class ApplicationCallGraph {
             count++;
         }
 
-        if(DEBUG) {
+        if (DEBUG) {
             System.out.println("The size of the caller: " + count);
-            /*for(InterproceduralCallGraphVertex v: res) {
-                System.out.println(v.getXmethod().toString());
-            }*/
+            /*
+             * for(InterproceduralCallGraphVertex v: res) {
+             * System.out.println(v.getXmethod().toString()); }
+             */
         }
 
         return res;
     }
 
     boolean isUndesiredMethName(String methName) {
-        // <init> method can have arguments too.  THey are usually associated with invokespecial
-        // or "new constructor" call.  The receiver here is not fully constructed so not very
-        // useful for us. So we continue to search upwards in the call graph. Similarly for <clinit>
-        if(methName.contains("$") || methName.contains("<init>") || methName.contains("<clinit>")) {
+        // <init> method can have arguments too. THey are usually associated
+        // with invokespecial
+        // or "new constructor" call. The receiver here is not fully constructed
+        // so not very
+        // useful for us. So we continue to search upwards in the call graph.
+        // Similarly for <clinit>
+        if (methName.contains("$") || methName.contains("<init>") || methName.contains("<clinit>")) {
             return true;
         }
 
@@ -125,45 +144,56 @@ public class ApplicationCallGraph {
     }
 
     /**
-     * Check if 1) caller belongs to an application class; 2) caller has at least one argument (not this);
-     * 3) caller does not belong to an inner class and is not aspect generated method (these are covered by checking
-     * if the class name or method name contains $. If no, go upwards in the call graph and find its caller on the application side
-     * This is actually an DFS.  Compared with getCallers, this method should be used more often.
-     * @param caller: dotted class name, to be checked
+     * Check if 1) caller belongs to an application class; 2) caller has at
+     * least one argument (not this); 3) caller does not belong to an inner
+     * class and is not aspect generated method (these are covered by checking
+     * if the class name or method name contains $. If no, go upwards in the
+     * call graph and find its caller on the application side This is actually
+     * an DFS. Compared with getCallers, this method should be used more often.
+     *
+     * @param caller
+     *            : dotted class name, to be checked
      * @return null if no application side caller
      */
     void getApplicationCallers(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
-            Set<InterproceduralCallGraphVertex> res, /*CallGraphDepth depth, */ Set<InterproceduralCallGraphVertex> visited) {
-        //        if(depth.distance > defaultSearchDepth) {
-        //            return;
-        //        }
+            Set<InterproceduralCallGraphVertex> res, /* CallGraphDepth depth, */Set<InterproceduralCallGraphVertex> visited) {
+        // if(depth.distance > defaultSearchDepth) {
+        // return;
+        // }
         XMethod callerMeth = caller.getXmethod();
         String type = callerMeth.getClassName();
 
-        if(type==null) {
+        if (type == null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if(callerMeth.getNumParams()<1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
-                || type.contains("$") || isUndesiredMethName(callerMeth.getName())) {
+        if (callerMeth.getNumParams() < 1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
+                || type.contains("$") || isUndesiredMethName(callerMeth.getName()) || isIgnored(type)) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
-            assert itor!=null; // itor cannot be null even if itor.hasNext() returns false.
-            while(itor.hasNext()) {
+            assert itor != null; // itor cannot be null even if itor.hasNext()
+            // returns false.
+            while (itor.hasNext()) {
 
                 InterproceduralCallGraphVertex newCaller = itor.next();
-                //RFile.writeDE2(newCaller.getXmethod().toString(), "/home/kaituo/tmp/a");
+                // RFile.writeDE2(newCaller.getXmethod().toString(),
+                // "/home/kaituo/tmp/a");
+                if (DEBUG) {
+                    System.out.print("->" + newCaller.getXmethod().toString());
+                }
                 if (!visited.contains(newCaller)) {
                     visited.add(newCaller);
                     getApplicationCallers(newCaller, callGraph, res, visited);
                 }
-                if(res.size()>0) {
-                    return;
-                }
+                // if(res.size()>0) {
+                // return;
+                // }
             }
         } else {
             res.add(caller);
+            // if(caller.getXmethod().getName().equals("getInstance")) {
+            // System.out.print("");
+            // }
         }
     }
-
 
 }
