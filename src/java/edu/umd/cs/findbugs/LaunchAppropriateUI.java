@@ -24,6 +24,9 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.umass.cs.rfbi.cg.HEPERMCG;
+import edu.umass.cs.rfbi.util.Config;
+import edu.umass.cs.rfbi.util.JSON;
 import edu.umd.cs.findbugs.internalAnnotations.StaticConstant;
 
 /**
@@ -196,5 +199,9 @@ public class LaunchAppropriateUI {
     public static void main(String args[]) throws Exception {
         LaunchAppropriateUI launcher = new LaunchAppropriateUI(args);
         launcher.launch();
+
+        if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
+            JSON.createJSONLog(HEPERMCG.getInstance().getJSONObj());//false
+        }
     }
 }

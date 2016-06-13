@@ -66,4 +66,14 @@ public class Config {
             return null; // could not apply configuration file
         }
     }
+
+    // used for logging mapping from types to its aspectj file name
+    public static final String LOG_STREAM_FILE = "logStream";
+    // used for keep record of confirmed perms
+    public static final String RUNTIME_FILE = "runtimeFile";
+    // used for keep record of all perms
+    public static final String ALL_RECORDS_FILE = "allRecordFile";
+
+    public static final String HE_PERM_FOLDER = "he.codegen.perm";
+
 }

@@ -5,8 +5,12 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
+import org.json.simple.JSONObject;
+
 import edu.umass.cs.rfbi.callgraph.ApplicationCallGraph;
 import edu.umass.cs.rfbi.util.Config;
+import edu.umass.cs.rfbi.util.JSON;
 import edu.umass.cs.rfbi.util.RFBIUtil;
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.XMethod;
@@ -82,23 +86,45 @@ public class SwitchAspectsGenerator {
         RFBIUtil.createFile(fileName);
 
         RFBIUtil.write(sb.toString(), fileName);
-        // make a record of all the blacklist classes
-        RFBIUtil.append(className+"."+methodName, instanceRecords);
+
     }
 
 
     public void generateAllSwitchAspects() {
         assert Config.getInstance().getBooleanProperty("switch.enabled");
         if(Config.getInstance().getBooleanProperty("he.switch.phase")) {
-            // Incomplete analyze
-            Set<String> allRecords = RFBIUtil.readFile2Set(new File(HEPERMDir+"/allRecords.txt"));
-            Set<String> permRecords = RFBIUtil.readFile2Set(new File(HEPERMDir+"/runtime.txt"));
+            // Find Unconfirmed perms
+            Set<String> allRecords = RFBIUtil.readFile2Set(new File(HEPERMDir + "/" + Config.ALL_RECORDS_FILE));
+            Set<String> permRecords = RFBIUtil.readFile2Set(new File(HEPERMDir + "/" + Config.RUNTIME_FILE));
             Set<String> leftOverPerms = RFBIUtil.difference(allRecords, permRecords);
-            generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
+            // Generate switches for unconfirmed persm
+            // generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
+            Set<InterproceduralCallGraphVertex> allCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
+            generateSwitchAspectJ(allCallers, "edu.umass.cs.rfbi.he", "HE");
+
+            // copy unconfirmed perms to its directory
+            String unconfirmedPermDir = Config.getInstance().getStringProperty("he.codegen.leftperm");
+            RFBIUtil.createFolder(unconfirmedPermDir);
+
+            File dest = new File(unconfirmedPermDir);
+            String allPermDir = Config.getInstance().getStringProperty("he.codegen.perm");
+            JSONObject records = (JSONObject) JSON.readJSONLog();
+
             for(String slashedClassName: leftOverPerms) {
-                HEPERMCG.getInstance(true).generatePERMAspectJ(slashedClassName.replace('/', '.'), slashedClassName);
+                StringBuffer sb = new StringBuffer();
+                sb.append(allPermDir);
+                sb.append("/HE");
+                sb.append(Long.toString((Long)(records.get(slashedClassName))));
+                sb.append(".aj");
+                File source = new File(sb.toString());
+                try {
+                    FileUtils.copyFileToDirectory(source, dest);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                //                HEPERMCG.getInstance(true).generatePERMAspectJ(slashedClassName.replace('/', '.'), slashedClassName);
             }
-            //ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
         }
     }
 
@@ -131,11 +157,15 @@ public class SwitchAspectsGenerator {
                 XMethod xmethod = caller.getXmethod();
                 String className = xmethod.getClassName();
                 String methName = xmethod.getName();
-                // make a record of static method
+                String sig = xmethod.getSignature();
+
                 if(xmethod.isStatic()) {
-                    RFBIUtil.append(className+"."+methName, staticRecords);
+                    // make a record of static method
+                    RFBIUtil.append(className + "." + methName + " " + sig, staticRecords);
                 } else {
                     generateSwitchPhase(className, methName, packageName, filePrefix, HEPj++, HESwitchDir);
+                    // make a record of all the blacklist classes
+                    RFBIUtil.append(className + "." + methName + " " + sig, instanceRecords);
                 }
             } catch (IOException e1) {
                 // TODO Auto-generated catch block

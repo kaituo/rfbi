@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.json.simple.JSONObject;
+
 import edu.umass.cs.rfbi.util.Config;
 import edu.umass.cs.rfbi.util.RFBIUtil;
 
@@ -18,29 +20,32 @@ public class HEPERMCG implements PERMCG {
     //public static String filePublic;
     private static HEPERMCG instance = null;
     private int pj;
+    JSONObject obj = new JSONObject();
+    //    private final String logStreamFile;
 
     /**
      * When generating aspects for unconfirmed bugs, I don't need to recreate
      * @param recreate: Whether I want to recreate the file folder or not
      */
-    protected HEPERMCG(boolean leftOverPerm) {
-        if(leftOverPerm) {
-            h2RDir = Config.getInstance().getStringProperty("he.codegen.leftperm");
-        } else {
-            h2RDir = Config.getInstance().getStringProperty("he.codegen.perm");
-        }
+    protected HEPERMCG() {//boolean leftOverPerm
+        //        if(leftOverPerm) {
+        //            h2RDir = Config.getInstance().getStringProperty("he.codegen.leftperm");
+        //        } else {
+        h2RDir = Config.getInstance().getStringProperty(Config.HE_PERM_FOLDER);
+        //        }
         RFBIUtil.createFolder(h2RDir);
-        runtimeFile = h2RDir+"/runtime.txt";
+        runtimeFile = h2RDir+"/" + Config.RUNTIME_FILE;
         RFBIUtil.createFile(runtimeFile);
-        allRecordFile = h2RDir+"/allRecords.txt";
+        allRecordFile = h2RDir +"/" + Config.ALL_RECORDS_FILE;
         RFBIUtil.createFile(allRecordFile);
+        //        logStreamFile = "/logstream.txt";
 
         pj = 1;
     }
 
-    public static HEPERMCG getInstance(boolean leftOverPerm) {
+    public static HEPERMCG getInstance() {//boolean leftOverPerm
         if(instance == null) {
-            instance = new HEPERMCG(leftOverPerm);
+            instance = new HEPERMCG();//leftOverPerm
         }
         return instance;
     }
@@ -109,6 +114,13 @@ public class HEPERMCG implements PERMCG {
     }
 
     public void generatePERMAspectJ(String dottedClassName, String slashedClassName) {
+
+
+        // keep a record of which aspect file maps to which perm
+        // so that later we can search files of unconfirmed perms
+        // that need to be copied to re-instrument benchmark programs.
+        obj.put(slashedClassName, pj);
+
         // method info
         StringBuffer publicPointCut = new StringBuffer();
         publicPointCut.append(generatePERMPart1(pj, "edu.umass.cs.rfbi.he"));
@@ -132,5 +144,9 @@ public class HEPERMCG implements PERMCG {
             e.printStackTrace();
         }
 
+    }
+
+    public JSONObject getJSONObj() {
+        return obj;
     }
 }

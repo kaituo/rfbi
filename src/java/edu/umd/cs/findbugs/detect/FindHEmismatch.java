@@ -297,7 +297,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
 
                 bugReporter.reportBug(bug); // (8)
                 if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
-                    HEPERMCG.getInstance(false).generatePERMAspectJ(getDottedClassName(), getClassName()); // Kaituo
+                    HEPERMCG.getInstance().generatePERMAspectJ(getDottedClassName(), getClassName()); // Kaituo false
                 }
 
             } else if (!inheritedHashCodeIsFinal && !whereHashCode.startsWith("java.util.Abstract")) {
@@ -330,7 +330,7 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
             }
             bugReporter.reportBug(bug); // (10)
             if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
-                HEPERMCG.getInstance(false).generatePERMAspectJ(getDottedClassName(), getClassName()); // Kaituo
+                HEPERMCG.getInstance().generatePERMAspectJ(getDottedClassName(), getClassName()); // Kaituo false
             }
         }
         if (!hasEqualsObject && !hasEqualsSelf && !usesDefaultEquals && !obj.isAbstract() && hasFields && inheritedEquals != null

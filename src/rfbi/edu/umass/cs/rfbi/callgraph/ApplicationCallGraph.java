@@ -129,13 +129,14 @@ public class ApplicationCallGraph {
         return res;
     }
 
+    /**
+     * <init> method can have arguments too. THey are usually associated with invokespecial or "new constructor" call.
+     * The receiver here is not fully constructed so not very useful for us. So we continue to search upwards in the call graph.
+     * Similarly for <clinit>
+     * @param methName
+     * @return
+     */
     boolean isUndesiredMethName(String methName) {
-        // <init> method can have arguments too. THey are usually associated
-        // with invokespecial
-        // or "new constructor" call. The receiver here is not fully constructed
-        // so not very
-        // useful for us. So we continue to search upwards in the call graph.
-        // Similarly for <clinit>
         if (methName.contains("$") || methName.contains("<init>") || methName.contains("<clinit>")) {
             return true;
         }
@@ -156,10 +157,7 @@ public class ApplicationCallGraph {
      * @return null if no application side caller
      */
     void getApplicationCallers(final InterproceduralCallGraphVertex caller, final InterproceduralCallGraph callGraph,
-            Set<InterproceduralCallGraphVertex> res, /* CallGraphDepth depth, */Set<InterproceduralCallGraphVertex> visited) {
-        // if(depth.distance > defaultSearchDepth) {
-        // return;
-        // }
+            Set<InterproceduralCallGraphVertex> res, Set<InterproceduralCallGraphVertex> visited) {
         XMethod callerMeth = caller.getXmethod();
         String type = callerMeth.getClassName();
 
@@ -170,13 +168,11 @@ public class ApplicationCallGraph {
                 || type.contains("$") || isUndesiredMethName(callerMeth.getName()) || isIgnored(type)) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
-            assert itor != null; // itor cannot be null even if itor.hasNext()
-            // returns false.
+            assert itor != null; // itor cannot be null even if itor.hasNext() returns false.
             while (itor.hasNext()) {
 
                 InterproceduralCallGraphVertex newCaller = itor.next();
-                // RFile.writeDE2(newCaller.getXmethod().toString(),
-                // "/home/kaituo/tmp/a");
+
                 if (DEBUG) {
                     System.out.print("->" + newCaller.getXmethod().toString());
                 }
@@ -190,9 +186,9 @@ public class ApplicationCallGraph {
             }
         } else {
             res.add(caller);
-            // if(caller.getXmethod().getName().equals("getInstance")) {
-            // System.out.print("");
-            // }
+            //            if(caller.getXmethod().getName().equals("getType")) {
+            //                System.out.print("");
+            //            }
         }
     }
 
