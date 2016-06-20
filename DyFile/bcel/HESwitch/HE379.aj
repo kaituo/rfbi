@@ -1,9 +1,0 @@
-package edu.umass.cs.rfbi.he;
-
-import edu.umass.cs.rfbi.util.TraceWriter;
-
-privileged aspect HE379 {
-	before(org.apache.bcel.generic.ConstantPoolGen instance): execution(* addUtf8(..)) && this(instance) {
-		TraceWriter.writeState(instance, "org.apache.bcel.generic.ConstantPoolGen.addUtf8", "/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HEState");
-	}
-}

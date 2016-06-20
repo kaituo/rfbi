@@ -161,10 +161,12 @@ public class ApplicationCallGraph {
         XMethod callerMeth = caller.getXmethod();
         String type = callerMeth.getClassName();
 
+
+
         if (type == null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if (callerMeth.getNumParams() < 1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
+        if (!callerMeth.isPublic() || callerMeth.getNumParams() < 1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
                 || type.contains("$") || isUndesiredMethName(callerMeth.getName()) || isIgnored(type)) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);
@@ -185,6 +187,9 @@ public class ApplicationCallGraph {
                 // }
             }
         } else {
+            if(type.equals("org.apache.bcel.classfile.AnnotationEntry")) {
+                System.out.print("");
+            }
             res.add(caller);
             //            if(caller.getXmethod().getName().equals("getType")) {
             //                System.out.print("");

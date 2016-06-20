@@ -76,4 +76,8 @@ public class Config {
 
     public static final String HE_PERM_FOLDER = "he.codegen.perm";
 
+    public static final String INSTANCE_RECORDS_FILE = "instanceRecords";
+
+    public static final String STATIC_RECORDS_FILE = "staticRecords";
+
 }

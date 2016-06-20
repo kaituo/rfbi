@@ -30,8 +30,8 @@ public class SwitchAspectsGenerator {
         HESwitchDir = Config.getInstance().getStringProperty("he.codegen.switch");
         HEPERMDir = Config.getInstance().getStringProperty("he.codegen.perm");
         HEStateDir = Config.getInstance().getStringProperty("he.save.state");
-        instanceRecords = HESwitchDir+"/instanceRecords.txt";
-        staticRecords = HESwitchDir+"/staticRecords.txt";
+        instanceRecords = HESwitchDir+"/" + Config.INSTANCE_RECORDS_FILE;
+        staticRecords = HESwitchDir+"/" + Config.STATIC_RECORDS_FILE;
         RFBIUtil.createFolder(HESwitchDir);
         RFBIUtil.createFolder(HEStateDir);
         RFBIUtil.createFile(instanceRecords);
@@ -100,6 +100,11 @@ public class SwitchAspectsGenerator {
             // Generate switches for unconfirmed persm
             // generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
             Set<InterproceduralCallGraphVertex> allCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
+
+            if(SystemProperties.getBoolean("rfbi.callgraph.debug")) {
+                return;
+            }
+
             generateSwitchAspectJ(allCallers, "edu.umass.cs.rfbi.he", "HE");
 
             // copy unconfirmed perms to its directory

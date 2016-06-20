@@ -1,1 +1,9 @@
+# Compiled source #
+###################
 /classesEclipse/
+
+# Generated source #
+###################
+*.aj
+*.txt
+*.trace.gz
