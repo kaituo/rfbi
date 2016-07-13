@@ -19,6 +19,8 @@
 
 package edu.umass.cs.rfbi.util;
 
+import static edu.umass.cs.rfbi.util.Assertions.check;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -73,7 +75,7 @@ public class RFBIUtil {
 
     }
 
-    public static File createFolder(String dir) {
+    public static File createFolder(String dir, boolean recreate) {
         File f = null;
         boolean bool = false;
 
@@ -88,17 +90,27 @@ public class RFBIUtil {
             // System.out.println("File exists: "+bool);
 
             if (bool == true) {
-                // delete() invoked
-                FileUtils.deleteDirectory(f);
+                if (recreate) {
+                    // delete() invoked
+                    FileUtils.deleteDirectory(f);
+                    // create new file in the system
+                    f.mkdirs();
+                }
+
+            } else {
+                f.mkdirs();
             }
-            // create new file in the system
-            f.mkdirs();
+
             return f;
         } catch (Exception e) {
             AnalysisContext.logError("Cannot create folders.");
             assert false;
         }
         return null;
+    }
+
+    public static File createFolder(String dir) {
+        return createFolder(dir, true);
     }
 
     public static File createFile(String file) {
@@ -109,16 +121,18 @@ public class RFBIUtil {
             // create new files
             f = new File(file);
 
-            // tests if file exists
-            bool = f.exists();
+            //            // tests if file exists
+            //            bool = f.exists();
+            //
+            //            // prints
+            //            // System.out.println("File exists: "+bool);
+            //
+            //            if (bool == true) {
+            //                // delete() invoked
+            //                f.delete();
+            //            }
 
-            // prints
-            // System.out.println("File exists: "+bool);
-
-            if (bool == true) {
-                // delete() invoked
-                f.delete();
-            }
+            check(!f.exists(), "file should not be already existed.");
             // create new file in the system
             f.createNewFile();
             return f;

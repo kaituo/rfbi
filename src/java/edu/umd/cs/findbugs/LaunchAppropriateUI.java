@@ -201,7 +201,7 @@ public class LaunchAppropriateUI {
         launcher.launch();
 
         if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
-            JSON.createJSONLog(HEPERMCG.getInstance().getJSONObj());//false
+            JSON.createJSONLog(HEPERMCG.getInstance().getJSONObj(), Config.getInstance().getStringProperty("he.codegen.perm") + "/" + Config.LOG_STREAM_FILE);//false
         }
     }
 }

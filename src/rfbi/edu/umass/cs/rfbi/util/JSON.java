@@ -31,18 +31,18 @@ import org.json.simple.parser.ParseException;
  * @author kaituo
  */
 public class JSON {
-    public static void createJSONLog(JSONObject obj) {
-        try (FileWriter file = new FileWriter(Config.getInstance().getStringProperty("he.codegen.perm") + "/" + Config.LOG_STREAM_FILE)) {
+    public static void createJSONLog(JSONObject obj, String path) {
+        try (FileWriter file = new FileWriter(path)) {
             file.write(obj.toJSONString());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public static Object readJSONLog() {
+    public static Object readJSONLog(String path) {
         JSONParser parser = new JSONParser();
         try {
-            return parser.parse(new FileReader(Config.getInstance().getStringProperty("he.codegen.perm") + "/" + Config.LOG_STREAM_FILE));
+            return parser.parse(new FileReader(path));
 
         } catch (IOException e) {
             e.printStackTrace();

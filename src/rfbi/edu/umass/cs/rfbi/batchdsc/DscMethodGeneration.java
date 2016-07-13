@@ -22,36 +22,60 @@ package edu.umass.cs.rfbi.batchdsc;
 import static edu.umass.cs.rfbi.util.Assertions.*;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.json.simple.JSONObject;
 
 import edu.umass.cs.rfbi.util.Config;
+import edu.umass.cs.rfbi.util.JSON;
+import edu.umass.cs.rfbi.util.RFBIUtil;
 
 /**
  * @author kaituo
  */
-public class TestMethodGeneration {
+public class DscMethodGeneration {
     Map<String, Class<?>> classes = new HashMap<>();
+    JSONObject jObj = new JSONObject();
 
-    // public static void testAddLocalVariable_01(String name, Type type,
-    // InstructionHandle start,
-    // InstructionHandle end ) {
-    //
-    // ((org.apache.bcel.generic.MethodGen) DeSerializedState.getInstance()
-    // .getDeserializedObj()).addLocalVariable(name, type, start, end);
-    // }
-    public void generate(String packageName, String stateFolder) {
+    private final String HEDscDir;
+
+    public DscMethodGeneration() {
+        HEDscDir = Config.getInstance().getStringProperty("dscbatch.he.dsc.dir");
+        RFBIUtil.createFolder(HEDscDir);
+    }
+
+    private StringBuffer createFolderPath4Package(String packageName) {
+        StringBuffer packageFolderName = new StringBuffer();
+
+        packageFolderName.append(HEDscDir);
+        packageFolderName.append(File.separator);
+
+        packageFolderName.append(packageName.replace(".", File.separator));
+        RFBIUtil.createFolder(packageFolderName.toString(), false);
+        return packageFolderName;
+    }
+
+    public void generate(String packageNamePrefix, String stateFolder) {
         File folder = new File(stateFolder);
         File[] listOfFiles = folder.listFiles();
 
-        Map<String, StringBuffer> generatedMethods = new HashMap<>();
-
+        Map<String, StringBuffer> generatedClasses = new HashMap<>();
+        Map<String, StringBuffer> simpleClassNames = new HashMap<>();
+        Map<String, Set<Method>> generatedMethods = new HashMap<>();
+        // if we use Map<String, Set<String>>, json simple would not
+        // put quotes around each member of the set values, which is
+        // not standard json and thus causes error.
+        Map<String, List<String>> meth2states = new HashMap<>();
 
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
@@ -61,20 +85,32 @@ public class TestMethodGeneration {
                 String canonicalMethName = fileName.substring(0, dollarIndex);
                 int lastDotMethod = canonicalMethName.lastIndexOf(".");
                 String className = canonicalMethName.substring(0, lastDotMethod);
-                if (!generatedMethods.containsKey(className)) {
+                int lastDotClass = className.lastIndexOf(".");
+                String simpleClassName = className.substring(lastDotClass + 1);
+                StringBuffer packageName = new StringBuffer();
+                packageName.append(packageNamePrefix);
+                packageName.append(className.substring(0, className.lastIndexOf(".")));
+
+                if (!generatedClasses.containsKey(className)) {
                     StringBuffer sb = new StringBuffer();
-                    generatedMethods.put(className, sb);
-                    sb.append("import ");
+                    generatedClasses.put(className, sb);
+                    generatedMethods.put(className, new HashSet<Method>());
+                    sb.append("package ");
                     sb.append(packageName);
-                    sb.append(";\n");
+                    sb.append(";\n\n");
                     sb.append("import edu.umass.cs.rfbi.DeSerializedState;\n\n");
 
                     sb.append("public class ");
-
-                    int lastDotClass = className.lastIndexOf(".");
-                    String simpleClassName = className.substring(lastDotClass + 1);
                     sb.append(simpleClassName);
                     sb.append("\n{\n");
+
+                    StringBuffer pkgeFolder = createFolderPath4Package(packageName.toString());
+                    StringBuffer filetoWrite = new StringBuffer();
+                    filetoWrite.append(pkgeFolder);
+                    filetoWrite.append(File.separator);
+                    filetoWrite.append(simpleClassName);
+                    filetoWrite.append(".java");
+                    simpleClassNames.put(filetoWrite.toString(), sb);
 
                     try {
                         Class<?> clazz = getClassForName(className);
@@ -87,7 +123,7 @@ public class TestMethodGeneration {
                         }
                     }
                 }
-                StringBuffer sb = generatedMethods.get(className);
+                StringBuffer sb = generatedClasses.get(className);
                 String methName = canonicalMethName.substring(lastDotMethod + 1);
 
                 List<Method> methods = getMethod(className, methName);
@@ -95,9 +131,25 @@ public class TestMethodGeneration {
                     continue;
                 }
 
+                StringBuffer simpleClassMethNameBuffer = new StringBuffer();
+                simpleClassMethNameBuffer.append(simpleClassName);
+                simpleClassMethNameBuffer.append(".test");
+                simpleClassMethNameBuffer.append(methName);
+                String simpleClassMethName = simpleClassMethNameBuffer.toString();
+
+                if(!meth2states.containsKey(simpleClassMethName)) {
+                    meth2states.put(simpleClassMethName, new ArrayList<String>());
+                }
+                meth2states.get(simpleClassMethName).add(fileName);
+
+                Set<Method> generatedMethodsFor = generatedMethods.get(className);
                 for(int j=0; j<methods.size(); j++) {
                     Method meth = methods.get(j);
-
+                    if(generatedMethodsFor.contains(meth)) {
+                        continue;
+                    } else {
+                        generatedMethodsFor.add(meth);
+                    }
                     sb.append(" public static void test");
                     sb.append(methName);
                     sb.append("(");
@@ -109,9 +161,9 @@ public class TestMethodGeneration {
                         if(k!=0) {
                             sb.append(", ");
                         }
-                        sb.append(paramsType[k].getName());
+                        sb.append(paramsType[k].getCanonicalName());
                         sb.append(" ");
-                        paramNameList[k] = String.valueOf('a'+k);
+                        paramNameList[k] = Character.toString((char)('a'+k));
                         sb.append(paramNameList[k]);
                     }
 
@@ -138,15 +190,61 @@ public class TestMethodGeneration {
                         }
                         sb.append(paramNameList[k]);
                     }
-                    sb.append(");\n}\n\n");
+                    sb.append(");\n }\n\n");
                 }
+
 
             }
         }
 
-        for (StringBuffer sb : generatedMethods.values()) {
+        for (StringBuffer sb : generatedClasses.values()) {
             sb.append("\n}");
         }
+
+        //        for (Map.Entry<String, StringBuffer> entry : simpleClassNames.entrySet()) {
+        //            String fileName = entry.getKey();
+        //            StringBuffer fileContent = entry.getValue();
+        //
+        //            StringBuffer filetoWrite = new StringBuffer();
+        //
+        //            filetoWrite.append(HEDscDir);
+        //            filetoWrite.append(File.separator);
+        //
+        //            filetoWrite.append(fileName);
+        //            filetoWrite.append(".java");
+        //
+        //            String filePath = filetoWrite.toString();
+        //            RFBIUtil.createFile(filePath);
+        //
+        //            try {
+        //                RFBIUtil.write(fileContent.toString(), filePath);
+        //            } catch(IOException e) {
+        //                e.printStackTrace();
+        //            }
+        //
+        //        }
+
+        for (Map.Entry<String, StringBuffer> entry : simpleClassNames.entrySet()) {
+            String filePath = entry.getKey().toString();
+            RFBIUtil.createFile(filePath);
+
+            try {
+                RFBIUtil.write(entry.getValue().toString(), filePath);
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        for(Map.Entry<String, List<String>> meth2state: meth2states.entrySet()) {
+            jObj.put(meth2state.getKey(), meth2state.getValue());
+        }
+
+        StringBuffer heBatchLogFile = new StringBuffer();
+        heBatchLogFile.append(HEDscDir);
+        heBatchLogFile.append(File.separator);
+        heBatchLogFile.append(Config.HE_BATCH_LOG);
+        JSON.createJSONLog(jObj, heBatchLogFile.toString());//false
+
     }
 
     public void generate() {
@@ -162,7 +260,6 @@ public class TestMethodGeneration {
         }
 
         Class<?> clazz = classes.get(className);
-        Method method = null;
         List<Method> res = new ArrayList<>();
 
         final Method[] declMeths = clazz.getDeclaredMethods();
@@ -173,7 +270,7 @@ public class TestMethodGeneration {
 
             // Kaituo: we would need a method with at least 1 argument to do sth
             if (declMeth.getName().equals(methName) && declMeth.getParameterTypes().length > 0) {
-                res.add(method);
+                res.add(declMeth);
 
             }
         }
@@ -191,5 +288,12 @@ public class TestMethodGeneration {
             check(false, cnfe);
         }
         return notNull(res);
+    }
+
+    public static void main(String[] args) {
+        if (!Config.getInstance().getBooleanProperty("dscbatch.enabled")) {
+            return;
+        }
+        (new DscMethodGeneration()).generate();
     }
 }

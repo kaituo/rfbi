@@ -113,7 +113,7 @@ public class SwitchAspectsGenerator {
 
             File dest = new File(unconfirmedPermDir);
             String allPermDir = Config.getInstance().getStringProperty("he.codegen.perm");
-            JSONObject records = (JSONObject) JSON.readJSONLog();
+            JSONObject records = (JSONObject) JSON.readJSONLog(Config.getInstance().getStringProperty("he.codegen.perm") + "/" + Config.LOG_STREAM_FILE);
 
             for(String slashedClassName: leftOverPerms) {
                 StringBuffer sb = new StringBuffer();

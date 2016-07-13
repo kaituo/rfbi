@@ -80,5 +80,7 @@ public class Config {
 
     public static final String STATIC_RECORDS_FILE = "staticRecords";
 
-    public static final String HE_BATCH_PACKAGE = "edu.umass.cs.rfbi.dscbatch.he";
+    public static final String HE_BATCH_PACKAGE = "rfbi.";
+
+    public static final String HE_BATCH_LOG = "statesmap";
 }
