@@ -50,7 +50,7 @@ public class SwitchAspectsGenerator {
         sb.append(packageName);
         sb.append(";");
         sb.append("\n\n");
-        sb.append("import edu.umass.cs.rfbi.util.TraceWriter;\n");
+        sb.append("import edu.umass.cs.rfbi.util.StateWriter;\n");
         sb.append("\nprivileged aspect ");
         sb.append(prefix);
         sb.append(index);
@@ -65,10 +65,54 @@ public class SwitchAspectsGenerator {
         //sb.append("+.");
         sb.append(methodName);
         sb.append("(..)) && this(instance) {");
-        sb.append("\n\t\tTraceWriter.writeState(instance, \"");
+        sb.append("\n\t\tStateWriter.writeState(instance, \"");
         sb.append(className);
         sb.append(".");
         sb.append(methodName);
+        sb.append("\", \"");
+        sb.append(HEStateDir);
+        sb.append("\");");
+        sb.append("\n\t}");
+        sb.append("\n}");
+
+        StringBuffer filetoWrite = new StringBuffer();
+        filetoWrite.append(dir);
+        filetoWrite.append("/");
+        filetoWrite.append(prefix);
+        filetoWrite.append(index);
+        filetoWrite.append(".aj");
+        String fileName = filetoWrite.toString();
+        RFBIUtil.createFile(fileName);
+
+        RFBIUtil.write(sb.toString(), fileName);
+
+    }
+
+    protected void generateSwitchPhase(String className, String packageName, String prefix, int index, String dir)
+            throws IOException {
+        StringBuffer sb = new StringBuffer();
+        sb.append("package ");
+        sb.append(packageName);
+        sb.append(";");
+        sb.append("\n\n");
+        sb.append("import edu.umass.cs.rfbi.util.StateWriter;\n");
+        sb.append("\nprivileged aspect ");
+        sb.append(prefix);
+        sb.append(index);
+        sb.append(" {");
+        sb.append("\n");
+
+
+        sb.append("\tbefore(");
+        sb.append(className);
+        sb.append(" instance): execution(* ");
+        //sb.append(className);
+        //sb.append("+.");
+        sb.append(className);
+        sb.append(".*(..)) && this(instance) {");
+        sb.append("\n\t\tStateWriter.writeState(instance, \"");
+        sb.append(className);
+        sb.append(".any");
         sb.append("\", \"");
         sb.append(HEStateDir);
         sb.append("\");");
@@ -163,6 +207,8 @@ public class SwitchAspectsGenerator {
      * @param filePrefix: "HE"
      */
     private void generateSwitchAspectJ(Set<InterproceduralCallGraphVertex> callers, String packageName, String filePrefix) {
+        Set<String> seenClassMethodNames = new HashSet<>();
+
         for(InterproceduralCallGraphVertex caller: callers) {
             //System.out.println(caller.getXmethod());
             try {
@@ -175,6 +221,7 @@ public class SwitchAspectsGenerator {
                     // make a record of static method
                     RFBIUtil.append(className + "." + methName + " " + sig, staticRecords);
                 } else {
+                    seenClassMethodNames.add(className);
                     generateSwitchPhase(className, methName, packageName, filePrefix, HEPj++, HESwitchDir);
                     // make a record of all the blacklist classes
                     RFBIUtil.append(className + "." + methName + " " + sig, instanceRecords);
@@ -185,5 +232,16 @@ public class SwitchAspectsGenerator {
             }
 
         }
+
+        for(String className: seenClassMethodNames) {
+            try {
+                generateSwitchPhase(className, packageName, filePrefix, HEPj++, HESwitchDir);
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+        }
+
+
     }
 }

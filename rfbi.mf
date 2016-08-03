@@ -1,9 +1,13 @@
 switch.enabled=true
 
+mainMethod=
+callGraphMode=XTA
+
 de.switch.phase=false
 de.switch.method=
 
 he.switch.phase=true
+
 he.codegen.switch=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HESwitch
 he.codegen.leftperm=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HELeftPerm
 he.save.state=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HEState
@@ -15,5 +19,10 @@ de.codegen.folder=/home/kaituo/code/rfbi/findbugs/DyFile/DE
 
 he.perm.phase=true
 he.codegen.perm=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HEPERM
+
+dscbatch.enabled=false
+dscbatch.he.state.dir=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HEState
+dscbatch.he.dsc.dir=/home/kaituo/code/rfbi/findbugs/DyFile/bcel/HEDsc
+
 
 
