@@ -319,6 +319,9 @@ public class FindHEmismatch extends OpcodeStackDetector implements StatelessDete
                     bug.addMethod(equalsMethod);
                 }
                 bugReporter.reportBug(bug); // (9)
+                if(Config.getInstance().getBooleanProperty("perm.enabled") && Config.getInstance().getBooleanProperty("he.perm.phase")) {
+                    HEPERMCG.getInstance().generatePERMAspectJ(getDottedClassName(), getClassName()); // Kaituo false
+                }
             }
         }
         if (!hasHashCode && !hasEqualsObject && !hasEqualsSelf && !usesDefaultEquals && usesDefaultHashCode && !obj.isAbstract()

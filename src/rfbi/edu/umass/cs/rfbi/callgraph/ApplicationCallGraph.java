@@ -30,7 +30,6 @@ import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 import edu.umd.cs.findbugs.classfile.DescriptorFactory;
-import edu.umd.cs.findbugs.classfile.Global;
 import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
 
@@ -92,17 +91,19 @@ public class ApplicationCallGraph {
      * @return
      */
     public Set<InterproceduralCallGraphVertex> getCallers(@SlashedClassName String className, String name, String signature,
-            boolean isStatic) {
-        InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
+            boolean isStatic, InterproceduralCallGraph callGraph) {
+        Set<InterproceduralCallGraphVertex> res = new HashSet<>();
+        //        InterproceduralCallGraph callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
         InterproceduralCallGraphVertex vertex;
         MethodDescriptor called = DescriptorFactory.instance().getMethodDescriptor(className, name, signature, isStatic);
 
         vertex = callGraph.lookupVertex(called);
         if (vertex == null) {
-            throw new RuntimeException("Cannot find a caller for " + called.toString());
+            System.out.println("Cannot find a vertex for " + called.toString());
+            return res;
         }
         Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(vertex);
-        Set<InterproceduralCallGraphVertex> res = new HashSet<>();
+
         HashSet<InterproceduralCallGraphVertex> cache = new HashSet<>();
         int count = 0;
 
@@ -166,7 +167,9 @@ public class ApplicationCallGraph {
         if (type == null) {
             throw new NullPointerException("An xmethod has not class name.  This should not happen.");
         }
-        if (!callerMeth.isPublic() || callerMeth.getNumParams() < 1 || !AnalysisContext.currentAnalysisContext().isApplicationClass(type)
+
+        //!callerMeth.isPublic() || callerMeth.getNumParams() < 1 ||
+        if (!AnalysisContext.currentAnalysisContext().isApplicationClass(type)
                 || type.contains("$") || isUndesiredMethName(callerMeth.getName()) || isIgnored(type)) {
 
             Iterator<InterproceduralCallGraphVertex> itor = callGraph.predecessorIterator(caller);

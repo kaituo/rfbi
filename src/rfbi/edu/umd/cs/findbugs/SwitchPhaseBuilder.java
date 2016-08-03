@@ -21,36 +21,53 @@ package edu.umd.cs.findbugs;
 
 import java.io.File;
 
+import edu.umass.cs.rfbi.util.Config;
 import edu.umd.cs.findbugs.config.UserPreferences;
+import edu.umd.cs.findbugs.detect.BuildAllocationSites;
+import edu.umd.cs.findbugs.detect.BuildHybridTypeAnalysis;
 import edu.umd.cs.findbugs.detect.BuildInterproceduralCallGraph;
+import edu.umd.cs.findbugs.detect.BuildRapidTypeAnalysis;
+import edu.umd.cs.findbugs.plan.DetectorFactorySelector;
+import edu.umd.cs.findbugs.plan.DetectorOrderingConstraint;
+import edu.umd.cs.findbugs.plan.SingleDetectorFactorySelector;
 
 /**
  * @author kaituo
  */
 public class SwitchPhaseBuilder {
+    private volatile CallGraphAnalysisMode mode = CallGraphAnalysisMode.CHA;
 
     /**
      *
-     * @param args: starting at 0th element, all of them are paths of jar files to analyze
+     * [-auxclasspath : separated auxiliary classpath entry] [-main main method] files to analyze
      */
     public static void main(String[] args) {
         SwitchPhaseBuilder cgbuilder = new SwitchPhaseBuilder();
         int arg = 0;
+        String[] auxPath = null;
+        String mainMethod = null;
 
         while (arg < args.length) {
             String option = args[arg];
 
             if (!option.startsWith("-")) {
                 break;
+            } else if (option.startsWith("-auxclasspath")) {
+                arg++;
+                auxPath = args[arg].split(":");
             }
+            //                else if (option.startsWith("-main")) {
+            //                arg++;
+            //                mainMethod = args[arg];
+            //            }
             arg++;
         }
 
-        cgbuilder.createCallGraph(args, arg);
+        cgbuilder.createCallGraph(args, arg, auxPath, mainMethod);
         //ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
     }
 
-    private void createCallGraph(String[] files, int startIndex) {
+    private void createCallGraph(String[] files, int startIndex, String[] auxPath, String mainMethod) {
         // Create temporary directory in filesystem
         //File tmpdir = RFBIUtil.createFolder("callGraphBuilder");
 
@@ -77,6 +94,12 @@ public class SwitchPhaseBuilder {
                 project.addFile(files[i]);
             }
 
+            if(auxPath != null) {
+                for (int j=0; j<auxPath.length; j++) {
+                    project.addAuxClasspathEntry(auxPath[j]);
+                }
+            }
+
             engine.setProject(project);
             PluginLoader fakeLoader = new PluginLoader(true, new File("fakeFile").toURL());
             Plugin fakePlugin = new Plugin("edu.umd.cs.findbugs.fakeplugin", null, null, fakeLoader, true, false);
@@ -84,10 +107,58 @@ public class SwitchPhaseBuilder {
             DetectorFactoryCollection dfc = new DetectorFactoryCollection(fakePlugin);
             DetectorFactoryCollection.resetInstance(dfc);
 
-            DetectorFactory detectorFactory = new DetectorFactory(fakePlugin, BuildInterproceduralCallGraph.class.getName(),
+            DetectorFactory detectorFactory_cha = new DetectorFactory(fakePlugin, BuildInterproceduralCallGraph.class.getName(),
                     BuildInterproceduralCallGraph.class, true, "slow", "", "");
-            fakePlugin.addDetectorFactory(detectorFactory);
-            dfc.registerDetector(detectorFactory);
+            fakePlugin.addDetectorFactory(detectorFactory_cha);
+            dfc.registerDetector(detectorFactory_cha);
+
+            if (Config.getInstance().getStringProperty("callGraphMode").equals("RTA")) {
+                DetectorFactory detectorFactory_allocationSites = new DetectorFactory(fakePlugin, BuildAllocationSites.class.getName(),
+                        BuildAllocationSites.class, true, "slow", "", "");
+                DetectorFactory detectorFactory_rta = new DetectorFactory(fakePlugin, BuildRapidTypeAnalysis.class.getName(),
+                        BuildRapidTypeAnalysis.class, true, "slow", "", "");
+
+                fakePlugin.addDetectorFactory(detectorFactory_allocationSites);
+                fakePlugin.addDetectorFactory(detectorFactory_rta);
+
+                dfc.registerDetector(detectorFactory_rta);
+                dfc.registerDetector(detectorFactory_allocationSites);
+                DetectorFactorySelector chaSelector = new SingleDetectorFactorySelector(fakePlugin, BuildInterproceduralCallGraph.class.getName());
+                DetectorFactorySelector rtaSelector = new SingleDetectorFactorySelector(fakePlugin, BuildRapidTypeAnalysis.class.getName());
+                DetectorFactorySelector allocSelector = new SingleDetectorFactorySelector(fakePlugin, BuildAllocationSites.class.getName());
+
+                DetectorOrderingConstraint constraint1 = new DetectorOrderingConstraint(chaSelector, rtaSelector);
+                //                constraint1.setSingleSource(chaSelector instanceof SingleDetectorFactorySelector);
+                fakePlugin.addInterPassOrderingConstraint(constraint1);
+
+                DetectorOrderingConstraint constraint2 = new DetectorOrderingConstraint(allocSelector, rtaSelector);
+                //                constraint2.setSingleSource(allocSelector instanceof SingleDetectorFactorySelector);
+                fakePlugin.addInterPassOrderingConstraint(constraint2);
+            } else if (Config.getInstance().getStringProperty("callGraphMode").equals("XTA")) {
+                DetectorFactory detectorFactory_allocationSites = new DetectorFactory(fakePlugin, BuildAllocationSites.class.getName(),
+                        BuildAllocationSites.class, true, "slow", "", "");
+                DetectorFactory detectorFactory_xta = new DetectorFactory(fakePlugin, BuildHybridTypeAnalysis.class.getName(),
+                        BuildHybridTypeAnalysis.class, true, "slow", "", "");
+
+                fakePlugin.addDetectorFactory(detectorFactory_allocationSites);
+                fakePlugin.addDetectorFactory(detectorFactory_xta);
+
+                dfc.registerDetector(detectorFactory_xta);
+                dfc.registerDetector(detectorFactory_allocationSites);
+                DetectorFactorySelector chaSelector = new SingleDetectorFactorySelector(fakePlugin, BuildInterproceduralCallGraph.class.getName());
+                DetectorFactorySelector xtaSelector = new SingleDetectorFactorySelector(fakePlugin, BuildHybridTypeAnalysis.class.getName());
+                DetectorFactorySelector allocSelector = new SingleDetectorFactorySelector(fakePlugin, BuildAllocationSites.class.getName());
+
+                DetectorOrderingConstraint constraint1 = new DetectorOrderingConstraint(chaSelector, xtaSelector);
+                //                constraint1.setSingleSource(chaSelector instanceof SingleDetectorFactorySelector);
+                fakePlugin.addInterPassOrderingConstraint(constraint1);
+
+                DetectorOrderingConstraint constraint2 = new DetectorOrderingConstraint(allocSelector, xtaSelector);
+                //                constraint2.setSingleSource(allocSelector instanceof SingleDetectorFactorySelector);
+                fakePlugin.addInterPassOrderingConstraint(constraint2);
+            }
+
+
             if (!dfc.factoryIterator().hasNext() || fakePlugin.getDetectorFactories().isEmpty()) {
                 throw new IllegalStateException();
             }
@@ -100,13 +171,28 @@ public class SwitchPhaseBuilder {
 
             engine.execute();
 
+            //            if(Config.getInstance().getBooleanProperty("switch.enabled")) {
+            //                InterproceduralCallGraph callGraph = null;
+            //                //                if(mode == CallGraphAnalysisMode.CHA) {
+            //                //                    callGraph = Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class);
+            //                //                } else if (mode == CallGraphAnalysisMode.RTA) {
+            //                //                    BuildRapidTypeAnalysis rtaAnalysis = new BuildRapidTypeAnalysis();
+            //                //                    int lastDot = mainMethod.lastIndexOf(".");
+            //                //
+            //                //                    rtaAnalysis.runAnalysis(Global.getAnalysisCache().getDatabase(InterproceduralCallGraph.class),
+            //                //                            XFactory.createXMethod(mainMethod.substring(0, lastDot), mainMethod.substring(lastDot+1), "([Ljava/lang/String)V", true));
+            //                //                    callGraph = rtaAnalysis.getRtaGraph();
+            //                //                }
+            //                SwitchAspectsGenerator scg = new SwitchAspectsGenerator(callGraph);
+            //                scg.generateAllSwitchAspects();
+            //            }
+
+
 
         } catch (Throwable t) {
             t.printStackTrace();
         } finally {
-
             DetectorFactoryCollection.resetInstance(null);
-
         }
     }
 

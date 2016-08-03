@@ -21,6 +21,7 @@ package edu.umd.cs.findbugs.ba.ch;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.graph.AbstractGraph;
 
@@ -86,4 +87,23 @@ public class InterproceduralCallGraph extends AbstractGraph<InterproceduralCallG
     //        super.clear();
     //        methodDescToVertexMap.clear();
     //    }
+
+    /**
+     * Find the InterproceduralCallGraphVertex for given XMethod.
+     *
+     * @param xmethod
+     *            an XMethod
+     * @return the XMethod's InterproceduralCallGraphVertex
+     */
+    public InterproceduralCallGraphVertex findVertex(XMethod xmethod) {
+        InterproceduralCallGraphVertex vertex;
+        vertex = lookupVertex(xmethod.getMethodDescriptor());
+        if (vertex == null) {
+            vertex = new InterproceduralCallGraphVertex();
+            vertex.setXmethod(xmethod);
+            addVertex(vertex);
+        }
+        return vertex;
+    }
+
 }

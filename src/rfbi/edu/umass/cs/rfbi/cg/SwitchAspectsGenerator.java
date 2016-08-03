@@ -14,6 +14,7 @@ import edu.umass.cs.rfbi.util.JSON;
 import edu.umass.cs.rfbi.util.RFBIUtil;
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.XMethod;
+import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraphVertex;
 
 /**
@@ -25,7 +26,9 @@ public class SwitchAspectsGenerator {
 
     public static final boolean DEBUG = SystemProperties.getBoolean("rfbi.SwitchAspectsGenerator.debug");
 
-    public SwitchAspectsGenerator() {
+    private final InterproceduralCallGraph callGraph;
+
+    public SwitchAspectsGenerator(InterproceduralCallGraph callGraph) {
         HEPj = 0;
         HESwitchDir = Config.getInstance().getStringProperty("he.codegen.switch");
         HEPERMDir = Config.getInstance().getStringProperty("he.codegen.perm");
@@ -36,13 +39,9 @@ public class SwitchAspectsGenerator {
         RFBIUtil.createFolder(HEStateDir);
         RFBIUtil.createFile(instanceRecords);
         RFBIUtil.createFile(staticRecords);
-    }
 
-    //    public void dyCheck(BugInstance bi) { }
-    //
-    //    public void dyCheck(String bi, String foul, String pN) { }
-    //
-    //    public void dyCheck(BugInstance bi, String foul, String pN) { }
+        this.callGraph = callGraph;
+    }
 
     protected void generateSwitchPhase(String className, String methodName, String packageName, String prefix, int index, String dir)
             throws IOException {
@@ -97,9 +96,14 @@ public class SwitchAspectsGenerator {
             Set<String> allRecords = RFBIUtil.readFile2Set(new File(HEPERMDir + "/" + Config.ALL_RECORDS_FILE));
             Set<String> permRecords = RFBIUtil.readFile2Set(new File(HEPERMDir + "/" + Config.RUNTIME_FILE));
             Set<String> leftOverPerms = RFBIUtil.difference(allRecords, permRecords);
-            // Generate switches for unconfirmed persm
+            // Generate switches for unconfirmed perms
             // generateHESwitch(leftOverPerms, "edu.umass.cs.rfbi.he", "HE");
-            Set<InterproceduralCallGraphVertex> allCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false);
+            //            Set<InterproceduralCallGraphVertex> allCallers = new HashSet<>();
+            //            for(String perm: leftOverPerms) {
+            //                allCallers.addAll(ApplicationCallGraph.getInstance().getCallers(perm, "hashCode", "()I", false));
+            //            }
+            Set<InterproceduralCallGraphVertex> allCallers = ApplicationCallGraph.getInstance().getCallers("java/lang/Object", "hashCode", "()I", false, callGraph);
+            // Set<InterproceduralCallGraphVertex> allCallers = generateHESwitch(leftOverPerms);
 
             if(SystemProperties.getBoolean("rfbi.callgraph.debug")) {
                 return;
@@ -134,20 +138,22 @@ public class SwitchAspectsGenerator {
     }
 
 
-    private void generateHESwitch(Set<String> leftOverPerms, String packageName, String filePrefix) {
+    private Set<InterproceduralCallGraphVertex> generateHESwitch(Set<String> leftOverPerms) {
         Set<InterproceduralCallGraphVertex> allCallers = new HashSet<>();
-        for(String perm: leftOverPerms) {
-            Set<InterproceduralCallGraphVertex> callers = ApplicationCallGraph.getInstance().getCallers(perm, "hashCode", "()I", false);
+        for (String perm : leftOverPerms) {
+            Set<InterproceduralCallGraphVertex> callers = ApplicationCallGraph.getInstance().getCallers(perm, "hashCode", "()I",
+                    false, callGraph);
             allCallers.addAll(callers);
 
-            if(DEBUG) {
+            if (DEBUG) {
                 System.out.println(callers.size() + " callers are to be genearated.");
             }
         }
-        if(DEBUG) {
+        if (DEBUG) {
             System.out.println(allCallers.size() + " callers altogether");
         }
-        generateSwitchAspectJ(allCallers, packageName, filePrefix);
+        //        generateSwitchAspectJ(allCallers, packageName, filePrefix);
+        return allCallers;
     }
 
     /**
@@ -158,6 +164,7 @@ public class SwitchAspectsGenerator {
      */
     private void generateSwitchAspectJ(Set<InterproceduralCallGraphVertex> callers, String packageName, String filePrefix) {
         for(InterproceduralCallGraphVertex caller: callers) {
+            //System.out.println(caller.getXmethod());
             try {
                 XMethod xmethod = caller.getXmethod();
                 String className = xmethod.getClassName();

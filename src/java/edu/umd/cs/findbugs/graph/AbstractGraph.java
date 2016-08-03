@@ -201,6 +201,7 @@ implements Graph<EdgeType, VertexType> {
         return null;
     }
 
+
     @Override
     public int getNumVertexLabels() {
         return maxVertexLabel;

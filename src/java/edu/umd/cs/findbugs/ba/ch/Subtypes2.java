@@ -108,6 +108,10 @@ public class Subtypes2 {
                 throw new ClassNotFoundException();
             }
         }
+
+        public Set<ClassDescriptor> get() {
+            return supertypeSet;
+        }
     }
 
     /**
@@ -830,6 +834,14 @@ public class Subtypes2 {
         return result;
     }
 
+    public Set<ClassDescriptor> getSubtypes(Set<ClassDescriptor> classDescriptors) throws ClassNotFoundException {
+        Set<ClassDescriptor> result = new HashSet<>();
+        for(ClassDescriptor c: classDescriptors) {
+            result.addAll(getSubtypes(c));
+        }
+        return result;
+    }
+
     /**
      * Determine whether or not the given class has any known subtypes.
      *
@@ -1198,6 +1210,14 @@ public class Subtypes2 {
             supertypeSetMap.put(classDescriptor, supertypeQueryResults);
         }
         return supertypeQueryResults;
+    }
+
+    public Set<ClassDescriptor> getSupertypeQueryResults(Set<ClassDescriptor> classDescriptors) {
+        Set<ClassDescriptor> res = new HashSet<>();
+        for(ClassDescriptor c: classDescriptors) {
+            res.addAll(getSupertypeQueryResults(c).get());
+        }
+        return res;
     }
 
     /**

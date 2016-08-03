@@ -1,21 +1,3 @@
-/*
- * FindBugs - Find Bugs in Java programs
- * Copyright (C) 2003-2008 University of Maryland
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
 package edu.umd.cs.findbugs.detect;
 
 import java.util.Set;
@@ -31,6 +13,7 @@ import edu.umd.cs.findbugs.NonReportingDetector;
 import edu.umd.cs.findbugs.SystemProperties;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
 import edu.umd.cs.findbugs.ba.ClassContext;
+import edu.umd.cs.findbugs.ba.XClass;
 import edu.umd.cs.findbugs.ba.XFactory;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.ba.ch.InterproceduralCallGraph;
@@ -49,7 +32,6 @@ import edu.umd.cs.findbugs.classfile.MethodDescriptor;
  * qualifiers. It could become a more general-purpose facility if there were a
  * need.
  *
- * @author David Hovemeyer
  */
 public class BuildInterproceduralCallGraph extends BytecodeScanningDetector implements NonReportingDetector {
 
@@ -96,9 +78,15 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
         case Constants.INVOKESPECIAL:
             count++;
             MethodDescriptor called = getMethodDescriptorOperand();
-            XMethod calledXMethod = XFactory.createXMethod(called);
-            InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
-            callGraph.createEdge(currentVertex, calledVertex);
+            if(currentVertex.getXmethod().getClassName().contains("HashMap") && currentVertex.getXmethod().getName().contains("hash")) {
+                System.out.print("");//called.getName().contains("hashCode") &&
+            }
+
+            //            if(!calledXMethod.isAbstract()) {
+            //                InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
+            //                callGraph.createEdge(currentVertex, calledVertex);
+            //            }
+
             addEdges4Subtypes(called, seen); // Kaituo
             break;
         default:
@@ -119,8 +107,13 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
      * @author Kaituo
      */
     private void addEdges4Subtypes(MethodDescriptor called, int seen) {
+        XMethod calledXMethod = XFactory.createXMethod(called);
+
         // Only invokevirtual and invokeinterface has dynamic calls (subtype is possible)
         if(seen==Constants.INVOKESTATIC || seen==Constants.INVOKESPECIAL) {
+            InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
+            callGraph.createEdge(currentVertex, calledVertex);
+
             return;
         }
         ClassDescriptor calledClass = called.getClassDescriptor();
@@ -133,6 +126,7 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
 
         try {
             Set<ClassDescriptor> mySubtypes = subtypes2.getSubtypes(calledClass);
+
             for (ClassDescriptor c : mySubtypes) {
                 if (c.equals(getClassDescriptor())) {
                     continue;
@@ -141,9 +135,35 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
                 MethodDescriptor called4Subtype = DescriptorFactory.instance().getMethodDescriptor(c.getClassName(), called.getName(),
                         called.getSignature(), false);
                 XMethod called4SubtypeXMethod = XFactory.createXMethod(called4Subtype);
+
+                // if a method is abstract, then this method can never be called directly
+                if(called4SubtypeXMethod.isAbstract()) {
+                    continue;
+                }
+
                 InterproceduralCallGraphVertex called4SubtypeVertex = findVertex(called4SubtypeXMethod);
                 callGraph.createEdge(currentVertex, called4SubtypeVertex);
             }
+
+            // if the method signature is concrete and the type of the method signature is abstract
+            // and all subtypes override the method signature then the method signature can never be called
+            // directly
+            if(!calledXMethod.isAbstract()) {
+                boolean allOverridden = true;
+                for(ClassDescriptor c: mySubtypes) {
+                    XClass clazz = AnalysisContext.currentXFactory().getXClass(c);
+                    XMethod m = clazz.findMethod(called.getName(), called.getSignature(), called.isStatic());
+                    if (m == null) {
+                        allOverridden = false;
+                        break;
+                    }
+                }
+                if(allOverridden) {
+                    InterproceduralCallGraphVertex calledVertex = findVertex(calledXMethod);
+                    callGraph.createEdge(currentVertex, calledVertex);
+                }
+            }
+
         } catch (ClassNotFoundException e) {
             AnalysisContext.logError("Error while create call graph edges for " + called.toString());
             assert false;
@@ -176,10 +196,11 @@ public class BuildInterproceduralCallGraph extends BytecodeScanningDetector impl
         }
         Global.getAnalysisCache().eagerlyPutDatabase(InterproceduralCallGraph.class, callGraph);
         if(Config.getInstance().getBooleanProperty("switch.enabled")) {
-            if(DEBUG) {
-                System.out.println("BuildInterprocedural's sawOpCode has been called " + count);
+            // we are in rta mode
+            if(!Config.getInstance().getStringProperty("callGraphMode").equals("CHA")) {
+                return;
             }
-            SwitchAspectsGenerator scg = new SwitchAspectsGenerator();
+            SwitchAspectsGenerator scg = new SwitchAspectsGenerator(callGraph);
             scg.generateAllSwitchAspects();
             //TraceWriter.writeState(callGraph);
         }

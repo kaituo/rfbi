@@ -172,7 +172,6 @@ public class AnalysisContext {
 
     private final Map<MethodInfo, MethodInfo> bridgeFrom;
 
-
     public AnalysisContext(@Nonnull Project project) {
         requireNonNull(project);
         this.project = project;
@@ -1081,6 +1080,5 @@ public class AnalysisContext {
         }
 
     }
-
 }
 

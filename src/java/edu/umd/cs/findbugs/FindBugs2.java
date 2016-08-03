@@ -1069,6 +1069,10 @@ public class FindBugs2 implements IFindBugsEngine {
                     }
                     boolean isHuge = currentAnalysisContext.isTooBig(classDescriptor);
                     if (isHuge && currentAnalysisContext.isApplicationClass(classDescriptor)) {
+                        // this may be a fake plugin that does not know this bug pattern
+                        if(DetectorFactoryCollection.instance().lookupBugPattern("SKIPPED_CLASS_TOO_BIG") == null) {
+                            continue;
+                        }
                         bugReporter.reportBug(new BugInstance("SKIPPED_CLASS_TOO_BIG", Priorities.NORMAL_PRIORITY)
                         .addClass(classDescriptor));
                     }

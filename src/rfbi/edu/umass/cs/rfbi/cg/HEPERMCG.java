@@ -89,7 +89,7 @@ public class HEPERMCG implements PERMCG {
         sb.append(";");
         sb.append("\n\n");
         sb.append("import edu.umass.cs.rfbi.util.RFile;\n");
-        sb.append("\npublic aspect HE");
+        sb.append("\npublic privileged aspect HE");
         sb.append(i);
         sb.append(" {");
         sb.append("\n");

@@ -41,4 +41,6 @@ public class InterproceduralCallGraphEdge extends AbstractEdge<InterproceduralCa
         super(source, target);
     }
 
+
+
 }

@@ -539,6 +539,9 @@ public class DetectorFactoryCollection implements UpdateCheckCallback {
      *            the BugPattern
      */
     public void registerBugPattern(BugPattern bugPattern) {
+        if(bugPattern.getType().equals("SKIPPED_CLASS_TOO_BIG")) {
+            System.out.print("");
+        }
         bugPatternMap.put(bugPattern.getType(), bugPattern);
     }
 
